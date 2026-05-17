@@ -47,7 +47,7 @@
       }
       credentialIsSet = !!(cfg.sync?.credentialRef && cfg.credentialKeys?.includes(cfg.sync.credentialRef))
       dataSection = { retentionDays: cfg.retentionDays != null ? String(cfg.retentionDays) : '' }
-      effectiveDeviceName = cfg.device ?? 'hostname'
+      effectiveDeviceName = cfg.device || 'hostname'
     } catch (e) {
       loadError = e instanceof Error ? e.message : 'Failed to load'
     } finally {
