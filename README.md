@@ -59,7 +59,7 @@ pnpm build
 
 ## Screenshot
 
-![This Week homepage dashboard](./docs/assets/readme/weekly-overview.png)
+![This Week homepage dashboard](https://raw.githubusercontent.com/juliantanx/aiusage/main/docs/assets/readme/weekly-overview.png)
 
 Homepage dashboard filtered to This Week, showing real local usage data across assistants.
 

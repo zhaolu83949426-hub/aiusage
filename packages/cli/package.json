@@ -9,9 +9,11 @@
     "aiusage": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
+    "prepack": "cp ../../README.md README.md",
     "build": "tsup && node scripts/copy-web.js",
     "dev": "tsx src/index.ts serve",
     "test": "vitest run",

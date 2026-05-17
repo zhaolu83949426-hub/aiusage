@@ -59,7 +59,7 @@ pnpm build
 
 ## 截图
 
-![本周首页仪表盘](./docs/assets/readme/weekly-overview.png)
+![本周首页仪表盘](https://raw.githubusercontent.com/juliantanx/aiusage/main/docs/assets/readme/weekly-overview.png)
 
 首页按“本周”筛选后的仪表盘，展示来自本地真实数据的多助手使用情况。
 
