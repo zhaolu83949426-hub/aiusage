@@ -187,6 +187,8 @@ const translations = {
       syncCredentialValue: 'Credential Value',
       credentialSet: 'Set — leave empty to keep',
       credentialNotSet: 'Not set',
+      showCredential: 'Show',
+      hideCredential: 'Hide',
     },
     home: {
       counterLabel: 'AI Tokens Consumed',
@@ -395,6 +397,8 @@ const translations = {
       syncCredentialValue: '凭据值',
       credentialSet: '已设置，留空则不修改',
       credentialNotSet: '未设置',
+      showCredential: '显示',
+      hideCredential: '隐藏',
     },
     home: {
       counterLabel: 'AI Token 消耗',

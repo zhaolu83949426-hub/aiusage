@@ -106,10 +106,8 @@
       }
       await saveConfig(payload)
       syncSaved = true
-      if (!syncError) {
-        credentialIsSet = !!syncData.credentialRef
-        lastCredentialRef = syncData.credentialRef ?? ''
-      }
+      credentialIsSet = !!syncData.credentialRef
+      lastCredentialRef = syncData.credentialRef ?? ''
       setTimeout(() => { syncSaved = false }, 2000)
     } catch (e) {
       syncError = e instanceof Error ? e.message : 'Save failed'
@@ -294,23 +292,14 @@
           <div class="field">
             <label class="field-label" for="field-sync-credential-value">{$t('settings.syncCredentialValue')}</label>
             <div class="credential-row">
-              {#if credentialVisible}
-                <input
-                  id="field-sync-credential-value"
-                  type="text"
-                  bind:value={credentialValue}
-                  class="field-input mono"
-                  placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
-                />
-              {:else}
-                <input
-                  id="field-sync-credential-value"
-                  type="password"
-                  bind:value={credentialValue}
-                  class="field-input mono"
-                  placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
-                />
-              {/if}
+              <input
+                id="field-sync-credential-value"
+                type={credentialVisible ? 'text' : 'password'}
+                value={credentialValue}
+                on:input={e => credentialValue = e.target.value}
+                class="field-input mono"
+                placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
+              />
               <button
                 type="button"
                 class="btn-secondary"
@@ -320,9 +309,9 @@
                 {#if credentialLoading}
                   ...
                 {:else if credentialVisible}
-                  Hide
+                  {$t('settings.hideCredential')}
                 {:else}
-                  Show
+                  {$t('settings.showCredential')}
                 {/if}
               </button>
             </div>
