@@ -16,7 +16,7 @@ vi.mock('../../src/config.js', () => ({
 }))
 
 import { createApiServer } from '../../src/api/server.js'
-import { loadConfig, saveConfig } from '../../src/config.js'
+import { loadConfig, saveConfig, loadCredential } from '../../src/config.js'
 
 describe('GET /api/config', () => {
   let db: Database.Database
@@ -222,5 +222,74 @@ describe('PUT /api/config', () => {
       body: 'not-json',
     })
     expect(res.status).toBe(400)
+  })
+})
+
+describe('GET /api/config/credential', () => {
+  let db: Database.Database
+  let server: http.Server
+  let baseUrl: string
+
+  beforeEach(async () => {
+    vi.mocked(loadConfig).mockReturnValue(null)
+    vi.mocked(loadCredential).mockReturnValue(null)
+    db = new Database(':memory:')
+    initializeDatabase(db)
+    server = createApiServer(db)
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        const addr = server.address() as { port: number }
+        baseUrl = `http://127.0.0.1:${addr.port}`
+        resolve()
+      })
+    })
+  })
+
+  afterEach(async () => {
+    if (server?.listening) {
+      server.closeIdleConnections?.()
+      server.closeAllConnections?.()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+    db.close()
+  })
+
+  it('returns 400 when credential ref is missing', async () => {
+    const res = await fetch(`${baseUrl}/api/config/credential`)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: {
+        code: 'MISSING_CREDENTIAL_REF',
+        message: 'credential ref is required',
+      },
+    })
+  })
+
+  it('returns 404 when credential is not found', async () => {
+    vi.mocked(loadConfig).mockReturnValue({
+      credentials: {},
+    } as any)
+
+    const res = await fetch(`${baseUrl}/api/config/credential?ref=github/user/repo/token`)
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({
+      error: {
+        code: 'CREDENTIAL_NOT_FOUND',
+        message: 'Credential not found',
+      },
+    })
+  })
+
+  it('returns the stored credential value for an existing ref', async () => {
+    vi.mocked(loadCredential).mockReturnValue('super-secret')
+    vi.mocked(loadConfig).mockReturnValue({
+      credentials: {
+        'github/user/repo/token': 'super-secret',
+      },
+    } as any)
+
+    const res = await fetch(`${baseUrl}/api/config/credential?ref=github/user/repo/token`)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ value: 'super-secret' })
   })
 })

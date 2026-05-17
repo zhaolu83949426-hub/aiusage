@@ -2,7 +2,7 @@ import http from 'node:http'
 import { hostname, platform } from 'node:os'
 import type Database from 'better-sqlite3'
 import { getPriceTable, setPriceOverride, removePriceOverride, getUserOverrides, DEFAULT_PRICE_TABLE, resolvePrice } from '@aiusage/core'
-import { loadConfig, saveConfig } from '../config.js'
+import { loadConfig, saveConfig, loadCredential } from '../config.js'
 import type { Config, SourcesConfig, SyncConfig } from '../config.js'
 import { extractProject } from './project-extraction.js'
 import type { SyncStartResult, SyncStatusSnapshot } from '../sync/runtime.js'
@@ -844,6 +844,24 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
         const devices = [...deviceMap.values()].sort((a, b) => b.recordCount - a.recordCount)
         json(res, { currentDeviceInstanceId: currentId, devices })
+        return
+      }
+
+      // ── /api/config/credential ──────────────────────────────────────
+      if (url.pathname === '/api/config/credential' && req.method === 'GET') {
+        const ref = url.searchParams.get('ref')?.trim()
+        if (!ref) {
+          json(res, { error: { code: 'MISSING_CREDENTIAL_REF', message: 'credential ref is required' } }, 400)
+          return
+        }
+
+        const value = loadCredential(ref)
+        if (!value) {
+          json(res, { error: { code: 'CREDENTIAL_NOT_FOUND', message: 'Credential not found' } }, 404)
+          return
+        }
+
+        json(res, { value })
         return
       }
 

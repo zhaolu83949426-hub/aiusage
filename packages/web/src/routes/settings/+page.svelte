@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { t } from '$lib/i18n.js'
-  import { fetchConfig, saveConfig, notifySettingsUpdated } from '$lib/api.js'
+  import { fetchConfig, saveConfig, fetchCredential, notifySettingsUpdated } from '$lib/api.js'
 
   let loading = true
   let loadError = null
@@ -12,6 +12,9 @@
   let syncData = { backend: '', repo: '', bucket: '', prefix: '', endpoint: '', region: '', credentialRef: '' }
   let credentialValue = ''
   let credentialIsSet = false
+  let credentialVisible = false
+  let credentialLoading = false
+  let lastCredentialRef = ''
   let dataSection = { retentionDays: '' }
   let effectiveDeviceName = ''
 
@@ -46,6 +49,7 @@
         credentialRef: cfg.sync?.credentialRef ?? '',
       }
       credentialIsSet = !!(cfg.sync?.credentialRef && cfg.credentialKeys?.includes(cfg.sync.credentialRef))
+      lastCredentialRef = cfg.sync?.credentialRef ?? ''
       dataSection = { retentionDays: cfg.retentionDays != null ? String(cfg.retentionDays) : '' }
       effectiveDeviceName = cfg.device || 'hostname'
     } catch (e) {
@@ -93,6 +97,7 @@
   }
 
   async function saveSync() {
+    maybeResetCredentialForRefChange()
     syncSaving = true; syncError = ''
     try {
       const payload = { sync: syncData.backend ? { ...syncData } : null }
@@ -102,8 +107,8 @@
       await saveConfig(payload)
       syncSaved = true
       if (!syncError) {
-        credentialValue = ''
         credentialIsSet = !!syncData.credentialRef
+        lastCredentialRef = syncData.credentialRef ?? ''
       }
       setTimeout(() => { syncSaved = false }, 2000)
     } catch (e) {
@@ -125,6 +130,47 @@
       dataError = e instanceof Error ? e.message : 'Save failed'
     } finally {
       dataSaving = false
+    }
+  }
+
+  function resetCredentialReveal() {
+    credentialValue = ''
+    credentialVisible = false
+    credentialLoading = false
+  }
+
+  function maybeResetCredentialForRefChange() {
+    if (syncData.credentialRef !== lastCredentialRef) {
+      lastCredentialRef = syncData.credentialRef
+      resetCredentialReveal()
+    }
+  }
+
+  async function toggleCredentialVisibility() {
+    syncError = ''
+
+    if (!syncData.credentialRef) return
+
+    if (credentialVisible) {
+      credentialVisible = false
+      return
+    }
+
+    if (credentialValue) {
+      credentialVisible = true
+      return
+    }
+
+    credentialLoading = true
+    try {
+      const data = await fetchCredential(syncData.credentialRef)
+      credentialValue = data.value ?? ''
+      credentialVisible = true
+      credentialIsSet = !!credentialValue
+    } catch (e) {
+      syncError = e instanceof Error ? e.message : 'Failed to load credential'
+    } finally {
+      credentialLoading = false
     }
   }
 
@@ -243,17 +289,43 @@
           </div>
           <div class="field">
             <label class="field-label" for="field-sync-credential-ref">{$t('settings.syncCredentialRef')}</label>
-            <input id="field-sync-credential-ref" type="text" bind:value={syncData.credentialRef} class="field-input mono" placeholder="GITHUB_TOKEN" />
+            <input id="field-sync-credential-ref" type="text" bind:value={syncData.credentialRef} class="field-input mono" placeholder="GITHUB_TOKEN" on:input={maybeResetCredentialForRefChange} />
           </div>
           <div class="field">
             <label class="field-label" for="field-sync-credential-value">{$t('settings.syncCredentialValue')}</label>
-            <input
-              id="field-sync-credential-value"
-              type="password"
-              bind:value={credentialValue}
-              class="field-input mono"
-              placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
-            />
+            <div class="credential-row">
+              {#if credentialVisible}
+                <input
+                  id="field-sync-credential-value"
+                  type="text"
+                  bind:value={credentialValue}
+                  class="field-input mono"
+                  placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
+                />
+              {:else}
+                <input
+                  id="field-sync-credential-value"
+                  type="password"
+                  bind:value={credentialValue}
+                  class="field-input mono"
+                  placeholder={credentialIsSet ? $t('settings.credentialSet') : $t('settings.credentialNotSet')}
+                />
+              {/if}
+              <button
+                type="button"
+                class="btn-secondary"
+                on:click={toggleCredentialVisibility}
+                disabled={!syncData.credentialRef || credentialLoading}
+              >
+                {#if credentialLoading}
+                  ...
+                {:else if credentialVisible}
+                  Hide
+                {:else}
+                  Show
+                {/if}
+              </button>
+            </div>
           </div>
         {/if}
       </div>
@@ -407,4 +479,32 @@
 
   .state-msg { color: var(--text-muted); padding: 2rem; text-align: center; }
   .state-msg.error { color: var(--rose); }
+
+  .credential-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .credential-row .field-input {
+    flex: 1;
+  }
+
+  .btn-secondary {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 </style>

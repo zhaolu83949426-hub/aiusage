@@ -104,6 +104,10 @@ export async function fetchConfig() {
   return apiFetch('/api/config')
 }
 
+export async function fetchCredential(ref) {
+  return apiFetch(buildUrl('/api/config/credential', { ref }))
+}
+
 export async function saveConfig(data) {
   const response = await fetch('/api/config', {
     method: 'PUT',
