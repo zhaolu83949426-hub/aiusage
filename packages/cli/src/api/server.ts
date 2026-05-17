@@ -920,7 +920,12 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
               if (!syncUpdate?.backend) {
                 delete existing.sync
               } else {
-                const newSync: SyncConfig = { backend: syncUpdate.backend as 'github' | 's3' }
+                const backendVal = String(syncUpdate.backend)
+                if (backendVal !== 'github' && backendVal !== 's3') {
+                  json(res, { error: { code: 'INVALID_BACKEND', message: 'sync.backend must be github or s3' } }, 400)
+                  return
+                }
+                const newSync: SyncConfig = { backend: backendVal as 'github' | 's3' }
                 for (const f of ['repo', 'bucket', 'prefix', 'endpoint', 'region', 'credentialRef'] as const) {
                   if (syncUpdate[f]) (newSync as any)[f] = String(syncUpdate[f])
                 }
