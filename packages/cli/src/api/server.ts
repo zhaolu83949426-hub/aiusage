@@ -3,10 +3,11 @@ import { hostname, platform } from 'node:os'
 import type Database from 'better-sqlite3'
 import { getPriceTable, setPriceOverride, removePriceOverride, getUserOverrides, DEFAULT_PRICE_TABLE, resolvePrice } from '@aiusage/core'
 import { loadConfig, saveConfig } from '../config.js'
+import type { Config, SourcesConfig, SyncConfig } from '../config.js'
 import { extractProject } from './project-extraction.js'
 import type { SyncStartResult, SyncStatusSnapshot } from '../sync/runtime.js'
 
-function getDateRangeFilter(range: string | null, from: string | null, to: string | null, prefix = ''): { where: string; params: Record<string, unknown> } {
+function getDateRangeFilter(range: string | null, from: string | null, to: string | null, prefix = '', weekStart: 0 | 1 = 1): { where: string; params: Record<string, unknown> } {
   const ts = prefix ? `${prefix}.ts` : 'ts'
 
   if (from && to) {
@@ -20,8 +21,9 @@ function getDateRangeFilter(range: string | null, from: string | null, to: strin
 
   if (range === 'week') {
     const dayOfWeek = today.getDay()
+    const diff = (dayOfWeek - weekStart + 7) % 7
     const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - dayOfWeek)
+    startOfWeek.setDate(today.getDate() - diff)
     return { where: `AND ${ts} >= @start`, params: { start: startOfWeek.getTime() } }
   }
   if (range === 'month') {
@@ -107,6 +109,9 @@ function getDeviceFilter(
 }
 
 export function createApiServer(db: Database.Database, options?: ApiServerOptions): http.Server {
+  const cfg = loadConfig()
+  let weekStart: 0 | 1 = (cfg?.weekStart ?? 1) as 0 | 1
+
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
 
@@ -141,7 +146,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
         }
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const tool = url.searchParams.get('tool')
         const tf = getToolFilter(tool)
 
@@ -239,7 +244,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           byTool[row.tool] = { tokens: row.tokens, cost: row.cost }
         }
 
-        const drJoin = getDateRangeFilter(range, from, to, 'r')
+        const drJoin = getDateRangeFilter(range, from, to, 'r', weekStart)
         const dfJoin = df.where ? df.where.replace(/device_instance_id/g, 'r.device_instance_id') : ''
         const tfJoin = getToolFilter(tool, 'r')
         const topToolCalls = db.prepare(`
@@ -268,7 +273,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
       // ── /api/tokens ───────────────────────────────────────────────
       if (url.pathname === '/api/tokens') {
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
         const tool = url.searchParams.get('tool')
@@ -323,7 +328,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
       // ── /api/cost ─────────────────────────────────────────────────
       if (url.pathname === '/api/cost') {
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
         const tool = url.searchParams.get('tool')
@@ -412,7 +417,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
       // ── /api/models ───────────────────────────────────────────────
       if (url.pathname === '/api/models') {
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
         const tool = url.searchParams.get('tool')
@@ -480,7 +485,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           return
         }
 
-        const dr = getDateRangeFilter(range, from, to, 'r')
+        const dr = getDateRangeFilter(range, from, to, 'r', weekStart)
         const tool = url.searchParams.get('tool')
         const tf = getToolFilter(tool, 'r')
 
@@ -514,7 +519,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
         const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10))
         const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('pageSize') || '50', 10)))
 
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
         const tool = url.searchParams.get('tool')
@@ -565,7 +570,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
       // ── /api/projects ─────────────────────────────────────────────
       if (url.pathname === '/api/projects') {
-        const dr = getDateRangeFilter(range, from, to)
+        const dr = getDateRangeFilter(range, from, to, '', weekStart)
         const device = url.searchParams.get('device')
         const df = getDeviceFilter(device, options?.currentDeviceInstanceId)
         const tool = url.searchParams.get('tool')
@@ -839,6 +844,109 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
         const devices = [...deviceMap.values()].sort((a, b) => b.recordCount - a.recordCount)
         json(res, { currentDeviceInstanceId: currentId, devices })
         return
+      }
+
+      // ── /api/config ───────────────────────────────────────────────
+      if (url.pathname === '/api/config') {
+        if (req.method === 'GET') {
+          const currentCfg = loadConfig() ?? {}
+          const { credentials, priceOverrides, platform, ...rest } = currentCfg
+          json(res, {
+            device: rest.device ?? null,
+            weekStart: rest.weekStart ?? 1,
+            dashboardPollInterval: rest.dashboardPollInterval ?? null,
+            parseInterval: rest.parseInterval ?? null,
+            retentionDays: rest.retentionDays ?? null,
+            sources: {
+              'claude-code': rest.sources?.['claude-code'] ?? null,
+              codex: rest.sources?.codex ?? null,
+              openclaw: rest.sources?.openclaw ?? null,
+              opencode: rest.sources?.opencode ?? null,
+            },
+            sync: rest.sync ?? null,
+            credentialKeys: credentials ? Object.keys(credentials) : [],
+          })
+          return
+        }
+
+        if (req.method === 'PUT') {
+          let body = ''
+          for await (const chunk of req) body += chunk
+          try {
+            const update = JSON.parse(body) as Record<string, unknown>
+            const existing: Config = loadConfig() ?? {}
+
+            if ('device' in update) {
+              if (!update.device) delete existing.device
+              else existing.device = String(update.device)
+            }
+            if ('weekStart' in update) {
+              const ws = Number(update.weekStart)
+              if (ws === 0 || ws === 1) {
+                existing.weekStart = ws as 0 | 1
+                weekStart = ws as 0 | 1
+              } else {
+                delete existing.weekStart
+              }
+            }
+            if ('dashboardPollInterval' in update) {
+              if (!update.dashboardPollInterval) delete existing.dashboardPollInterval
+              else existing.dashboardPollInterval = Number(update.dashboardPollInterval)
+            }
+            if ('parseInterval' in update) {
+              if (!update.parseInterval) delete existing.parseInterval
+              else existing.parseInterval = Number(update.parseInterval)
+            }
+            if ('retentionDays' in update) {
+              if (!update.retentionDays) delete existing.retentionDays
+              else existing.retentionDays = Number(update.retentionDays)
+            }
+
+            if (update.sources && typeof update.sources === 'object') {
+              const src = update.sources as Record<string, unknown>
+              const s: SourcesConfig = existing.sources ?? {}
+              for (const key of ['claude-code', 'codex', 'openclaw', 'opencode'] as const) {
+                if (key in src) {
+                  if (!src[key]) delete s[key]
+                  else s[key] = String(src[key])
+                }
+              }
+              if (Object.keys(s).length) existing.sources = s
+              else delete existing.sources
+            }
+
+            if ('sync' in update) {
+              const syncUpdate = update.sync as Record<string, unknown> | null
+              if (!syncUpdate?.backend) {
+                delete existing.sync
+              } else {
+                const newSync: SyncConfig = { backend: syncUpdate.backend as 'github' | 's3' }
+                for (const f of ['repo', 'bucket', 'prefix', 'endpoint', 'region', 'credentialRef'] as const) {
+                  if (syncUpdate[f]) (newSync as any)[f] = String(syncUpdate[f])
+                }
+                existing.sync = newSync
+              }
+            }
+
+            if (update.credentials && typeof update.credentials === 'object') {
+              const creds = update.credentials as Record<string, unknown>
+              const c: Record<string, string> = existing.credentials ?? {}
+              for (const [key, val] of Object.entries(creds)) {
+                if (val !== '' && val !== null && val !== undefined) {
+                  c[key] = String(val)
+                }
+              }
+              if (Object.keys(c).length) existing.credentials = c
+              else delete existing.credentials
+            }
+
+            saveConfig(existing)
+            json(res, { ok: true })
+          } catch {
+            json(res, { error: { code: 'INVALID_JSON', message: 'Invalid JSON body' } }, 400)
+          }
+          return
+        }
       }
 
       // ── 404 ───────────────────────────────────────────────────────
