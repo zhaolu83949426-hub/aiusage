@@ -45,6 +45,8 @@ export interface Config {
   priceOverrides?: Record<string, PriceEntry>
   /** Override default source paths for each AI tool */
   sources?: SourcesConfig
+  /** First day of week: 0 = Sunday (Western), 1 = Monday (ISO/Chinese). Defaults to 1. */
+  weekStart?: 0 | 1
 }
 
 export function loadConfig(): Config | null {
