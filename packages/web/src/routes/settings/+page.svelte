@@ -13,6 +13,7 @@
   let credentialValue = ''
   let credentialIsSet = false
   let dataSection = { retentionDays: '' }
+  let effectiveDeviceName = ''
 
   // Per-section save state
   let generalSaving = false; let generalError = ''; let generalSaved = false
@@ -46,6 +47,7 @@
       }
       credentialIsSet = !!(cfg.sync?.credentialRef && cfg.credentialKeys?.includes(cfg.sync.credentialRef))
       dataSection = { retentionDays: cfg.retentionDays != null ? String(cfg.retentionDays) : '' }
+      effectiveDeviceName = cfg.device ?? 'hostname'
     } catch (e) {
       loadError = e instanceof Error ? e.message : 'Failed to load'
     } finally {
@@ -67,6 +69,7 @@
         device: general.device || null,
         parseInterval: general.parseInterval ? Number(general.parseInterval) : null,
       })
+      effectiveDeviceName = general.device || 'hostname'
       generalSaved = true
       setTimeout(() => { generalSaved = false }, 2000)
     } catch (e) {
@@ -155,6 +158,7 @@
           <label class="field-label" for="field-device">{$t('settings.device')}</label>
           <div class="field-hint">{$t('settings.deviceHint')}</div>
           <input id="field-device" type="text" bind:value={general.device} class="field-input" placeholder="hostname" />
+          <div class="field-hint">Effective device name: {effectiveDeviceName}</div>
         </div>
         <div class="field">
           <label class="field-label" for="field-week-start">{$t('settings.weekStart')}</label>
