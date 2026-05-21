@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1] - 2026-05-21
+
+### Fixed
+- UI layout no longer constrained to 1100px max-width, fixing empty right-side space on high-resolution/widescreen displays
+- Docs page text constrained to 72ch max-width for readability on wide viewports
+- `serve` command now handles occupied dev ports gracefully
+
+### Changed
+- CI npm auth rewritten to write token directly to `~/.npmrc` instead of relying on `setup-node` registry-url
+
+---
+
 ## [1.1.0] - 2026-05-21
 
 ### Added
