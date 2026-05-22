@@ -1,6 +1,6 @@
 # aiusage
 
-在一个地方追踪 Claude Code、Codex、OpenClaw、OpenCode 的 AI 编程助手使用情况，包括 token 消耗、费用和工具调用。
+在一个地方追踪 Claude Code、Codex、OpenClaw、OpenCode 和 Hermes 的 AI 编程助手使用情况，包括 token 消耗、费用和工具调用。
 
 [English](https://github.com/juliantanx/aiusage/blob/main/README.md) | 中文
 
@@ -14,7 +14,7 @@
 
 ## 快速开始
 
-**前置条件：** Node.js >= 18
+**前置条件：** Node.js >= 18（已在 v18 LTS 和 v22 LTS 上测试；不支持 Node.js 16 及以下版本）
 
 ```bash
 # 安装
@@ -54,6 +54,14 @@ npm link
 ```bash
 pnpm build
 ```
+
+在本地切换 Node.js 版本后，需要为新版本重新编译 `better-sqlite3` 原生模块：
+
+```bash
+pnpm rebuild:sqlite
+```
+
+> 此步骤仅适用于从源码开发的情况。通过 `npm install -g` 安装的用户无需执行——安装时会自动完成编译。
 
 </details>
 
@@ -124,7 +132,7 @@ aiusage serve
 
 ### 多机同步
 
-适合把多台机器上的 Claude Code、Codex、OpenClaw、OpenCode 使用数据聚合到同一个仪表盘中。
+适合把多台机器上的 Claude Code、Codex、OpenClaw、OpenCode、Hermes 使用数据聚合到同一个仪表盘中。
 
 **架构：**
 
@@ -149,7 +157,7 @@ aiusage serve
 
 **第二步 — 在每台机器上安装并配置**
 
-在每一台使用 Claude Code、Codex、OpenClaw 或 OpenCode 的机器上执行：
+在每一台使用 Claude Code、Codex、OpenClaw、OpenCode 或 Hermes 的机器上执行：
 
 ```bash
 # 安装 aiusage CLI
@@ -324,6 +332,7 @@ docker build -t aiusage .
 | Codex | `~/.codex/sessions/` | `~/.codex/sessions/` | `%USERPROFILE%\.codex\sessions\` |
 | OpenClaw | `~/.openclaw/agents/*/sessions/` | `~/.openclaw/agents/*/sessions/` | `%USERPROFILE%\.openclaw\agents\*\sessions\` |
 | OpenCode | `~/Library/Application Support/opencode/opencode.db` | `~/.local/share/opencode/opencode.db` | `%APPDATA%\opencode\opencode.db` |
+| Hermes | `~/.hermes/state.db` | `~/.hermes/state.db` | `%USERPROFILE%\.hermes\state.db` |
 
 发现行为：
 
@@ -331,6 +340,7 @@ docker build -t aiusage .
 - **Codex** — 递归扫描 `~/.codex/sessions/**` 下的 `.jsonl` 文件。
 - **OpenClaw** — 扫描 `~/.openclaw/agents/*/sessions/` 下各 agent 的 `sessions/` 目录，并跳过 checkpoint 文件。
 - **OpenCode** — 直接读取 SQLite 数据库文件，而不是 `.jsonl` 日志。
+- **Hermes** — 直接读取 SQLite 数据库文件（`state.db`）。没有记录结束时间的会话，只要有 token 数据也会被导入（例如强制退出的会话）。
 
 > 在 Linux 上，如果设置了 `$XDG_DATA_HOME`，OpenCode 会优先使用它。
 
@@ -344,7 +354,8 @@ docker build -t aiusage .
     "claude-code": "/自定义路径/.claude/projects",
     "codex": "/自定义路径/.codex/sessions",
     "openclaw": "/自定义/sessions目录",
-    "opencode": "/自定义路径/opencode.db"
+    "opencode": "/自定义路径/opencode.db",
+    "hermes": "/自定义路径/.hermes/state.db"
   }
 }
 ```
@@ -399,9 +410,9 @@ packages/
 
 <a href="https://www.star-history.com/?repos=juliantanx%2Faiusage&type=date&logscale=&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&theme=dark&legend=top-left&t=20260522" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left&t=20260522" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left&t=20260522" />
  </picture>
 </a>
 

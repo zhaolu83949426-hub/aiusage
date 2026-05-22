@@ -55,6 +55,14 @@ After pulling updates, rebuild to pick up changes:
 pnpm build
 ```
 
+If you switch Node.js versions locally, recompile the `better-sqlite3` native module for the new version:
+
+```bash
+pnpm rebuild:sqlite
+```
+
+> This is only needed when developing from source. Users who install via `npm install -g` do not need to do this — the module is compiled automatically during installation.
+
 </details>
 
 ## Screenshots
@@ -402,9 +410,9 @@ packages/
 
 <a href="https://www.star-history.com/?repos=juliantanx%2Faiusage&type=date&logscale=&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&theme=dark&legend=top-left&t=20260522" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left&t=20260522" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=juliantanx/aiusage&type=date&legend=top-left&t=20260522" />
  </picture>
 </a>
 
