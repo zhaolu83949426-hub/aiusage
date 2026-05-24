@@ -1,39 +1,29 @@
 # aiusage
 
+[![npm version](https://img.shields.io/npm/v/@juliantanx/aiusage)](https://www.npmjs.com/package/@juliantanx/aiusage)
+[![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+
 在一个地方追踪 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder 的 AI 编程助手使用情况，包括 token 消耗、费用和工具调用。
 
+aiusage 为你提供一个本地优先的统一视图，用来理解 AI 编程工具的使用情况：token、成本、模型分布、工具活跃度、项目、会话，以及按需启用的多设备同步。
+
 [English](https://github.com/juliantanx/aiusage/blob/main/README.md) | 中文
-
-## 为什么使用 aiusage
-
-- 将多个 AI 编程助手的本地会话日志汇总到同一个视图中。
-- 分析 token 用量、费用、模型分布和工具调用活跃度。
-- 通过本地 Web 仪表盘查看从今天到全部时间的概览趋势和汇总。
-- 通过 GitHub、S3 或 R2 在多台设备之间同步数据。
-- 默认本地优先，只有在需要共享视图时才启用云同步。
 
 ## 快速开始
 
 **前置条件：** Node.js 18 或更高版本
 
 ```bash
-# 安装
 npm install -g @juliantanx/aiusage
-
-# 解析本地会话日志
-aiusage parse
-
-# 启动仪表盘
-aiusage serve
-# 打开 http://localhost:3847
-```
-
-日常使用通常只需要：
-
-```bash
 aiusage parse
 aiusage serve
 ```
+
+打开 `http://localhost:3847` 即可查看仪表盘。
+
+如果 aiusage 对你有帮助，欢迎给仓库点一个 Star，帮助更多开发者发现它。
 
 `aiusage` 不会内建后台解析任务。如果你需要自动导入，请使用 cron 或任务计划定时执行 `aiusage parse`。
 
@@ -65,6 +55,38 @@ pnpm rebuild:sqlite
 
 </details>
 
+## 为什么使用 aiusage
+
+默认情况下，AI 编程助手的使用数据是分散的：不同工具、不同本地日志、不同机器，而且很难统一查看 token 和成本。
+
+aiusage 把这些数据汇总到一个本地优先的仪表盘中，让你可以：
+
+- 在一个地方查看 token 用量、成本、模型分布和工具调用活跃度。
+- 汇总 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder 的使用数据。
+- 通过概览、token、成本、模型、会话和项目视图理解长期使用趋势。
+- 在需要共享视图时，通过 GitHub、S3 或 R2 在多台设备之间同步。
+- 默认保持数据本地，仅在你明确配置时才启用同步。
+
+## 适合谁使用？
+
+aiusage 适合：
+
+- 每天都在使用 Claude Code、Codex 或其他 AI 编程助手的开发者。
+- 希望长期跟踪 token 用量和成本变化的人。
+- 同时使用多种 AI 编程工具、希望统一查看数据的用户。
+- 需要跨多台机器汇总使用情况的个人或团队。
+
+## 已支持的工具
+
+aiusage 当前支持：
+
+- Claude Code
+- Codex
+- OpenClaw
+- OpenCode
+- Hermes
+- Qoder
+
 ## 截图
 
 ![首页仪表盘](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/home.png)
@@ -72,6 +94,16 @@ pnpm rebuild:sqlite
 ![概览页面](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/overview.png)
 
 ![Token 用量页面](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/token.png)
+
+## 常见使用场景
+
+你可以用 aiusage 来：
+
+- 跟踪不同 AI 编程助手的 token 与成本趋势。
+- 比较模型使用情况和长期活跃度。
+- 查看工具调用频率与会话级行为。
+- 汇总多台设备上的使用数据。
+- 通过本地部署或 Docker 持续运行可视化仪表盘。
 
 ## CLI 命令参考
 
@@ -527,6 +559,28 @@ packages/
   web/      - SvelteKit Web 仪表盘（SPA）
 ```
 
+## 常见问题
+
+### aiusage 会上传我的数据吗？
+
+不会。aiusage 是本地优先的，你的数据默认保留在本机，除非你主动配置同步后端。
+
+### 我可以在多台机器上使用 aiusage 吗？
+
+可以。你可以通过 GitHub、S3 或 R2 同步数据，然后在任意一台已配置的机器或 Docker 部署中查看聚合结果。
+
+### aiusage 会自动在后台解析日志吗？
+
+不会。默认情况下需要你手动运行 `aiusage parse`。如果需要自动化，可以通过 cron、任务计划程序或你自己的调度系统来执行。
+
+### 目前支持哪些助手？
+
+目前支持 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder。
+
+### 我可以直接查看原始数据库吗？
+
+可以。aiusage 使用本地 SQLite 数据库保存数据，README 中已经说明如何用 DBeaver、TablePlus、DataGrip 或 DB Browser for SQLite 直接打开查看。
+
 ## 友情链接
 
 [**linux.do**](https://linux.do/) —— 感谢 L 站及其社区为项目开发与交流提供的支持与启发。
@@ -541,6 +595,10 @@ packages/
  </picture>
 </a>
 
+## 贡献
+
+欢迎贡献！请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解如何参与。
+
 ## 许可证
 
-MIT
+[MIT](./LICENSE)

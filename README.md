@@ -1,39 +1,29 @@
 # aiusage
 
-Track AI coding assistant usage, token consumption, cost, and tool calls in one place across Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
+[![npm version](https://img.shields.io/npm/v/@juliantanx/aiusage)](https://www.npmjs.com/package/@juliantanx/aiusage)
+[![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+
+Track AI coding assistant usage, token consumption, cost, and tool calls across Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
+
+aiusage gives you one local-first place to understand how your AI coding tools are being used: tokens, cost, model mix, tool activity, projects, sessions, and multi-machine sync when you need it.
 
 English | [中文](https://github.com/juliantanx/aiusage/blob/main/README_zh.md)
-
-## Why aiusage
-
-- Aggregate local session logs from multiple AI coding assistants into one view.
-- Analyze token usage, cost, model mix, and tool call activity.
-- Explore the data through a local dashboard with overview ranges from Today to All Time.
-- Sync usage data across multiple machines with GitHub, S3, or R2.
-- Keep everything local-first, with optional cloud sync when you need shared visibility.
 
 ## Quick Start
 
 **Prerequisites:** Node.js 18 or later
 
 ```bash
-# Install
 npm install -g @juliantanx/aiusage
-
-# Parse local session logs
-aiusage parse
-
-# Start the dashboard
-aiusage serve
-# Open http://localhost:3847
-```
-
-Day-to-day usage is usually just:
-
-```bash
 aiusage parse
 aiusage serve
 ```
+
+Open `http://localhost:3847` to explore the dashboard.
+
+If aiusage is useful, consider starring the repo to help more developers discover it.
 
 `aiusage` does not run a built-in background parser. If you want automatic imports, schedule `aiusage parse` with cron or Task Scheduler.
 
@@ -65,6 +55,38 @@ pnpm rebuild:sqlite
 
 </details>
 
+## Why aiusage
+
+AI coding assistant usage is scattered by default: different tools, different local logs, different machines, and no shared view of tokens or cost.
+
+aiusage brings that data into one local-first dashboard so you can:
+
+- Track token usage, cost, model mix, and tool-call activity in one place.
+- Aggregate usage across Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
+- Understand usage over time through overview, token, cost, model, session, and project views.
+- Sync across multiple machines with GitHub, S3, or R2 when shared visibility matters.
+- Keep your data local by default, with optional sync only when you choose it.
+
+## Who is this for?
+
+aiusage is built for:
+
+- Developers using Claude Code, Codex, or other AI coding assistants every day.
+- People who want visibility into token usage and spend over time.
+- Multi-tool users who want one dashboard instead of multiple disconnected logs.
+- Multi-machine workflows that need optional aggregation and sync.
+
+## Supported tools
+
+aiusage currently supports:
+
+- Claude Code
+- Codex
+- OpenClaw
+- OpenCode
+- Hermes
+- Qoder
+
 ## Screenshots
 
 ![Homepage dashboard](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/home.png)
@@ -72,6 +94,16 @@ pnpm rebuild:sqlite
 ![Overview page](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/overview.png)
 
 ![Token usage page](https://cdn.jsdelivr.net/gh/juliantanx/aiusage@0ae8299/docs/assets/readme/token.png)
+
+## Common use cases
+
+Use aiusage to:
+
+- Track token and cost trends across AI coding assistants.
+- Compare model usage and activity over time.
+- Inspect tool-call volume and session-level behavior.
+- Aggregate usage across multiple machines into one view.
+- Run a local or Docker-hosted dashboard for ongoing visibility.
 
 ## CLI Reference
 
@@ -527,6 +559,28 @@ packages/
   web/      - SvelteKit web dashboard (SPA)
 ```
 
+## FAQ
+
+### Does aiusage upload my data?
+
+No. aiusage is local-first. Your usage data stays on your machine unless you explicitly configure a sync backend.
+
+### Can I use aiusage across multiple machines?
+
+Yes. You can sync usage data through GitHub, S3, or R2 and then view the combined result from any configured machine or Docker deployment.
+
+### Does aiusage run a background parser automatically?
+
+No. By default, you run `aiusage parse` manually. You can automate parsing and syncing with cron, Task Scheduler, or your own scheduler.
+
+### Which assistants are supported?
+
+aiusage currently supports Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
+
+### Can I inspect the raw database myself?
+
+Yes. aiusage stores data in a local SQLite database, and the README already documents how to open it in tools like DBeaver, TablePlus, DataGrip, or DB Browser for SQLite.
+
 ## Friends
 
 [**linux.do**](https://linux.do/) — Thanks to the linux.do community for their support and inspiration during the development of this project.
@@ -541,6 +595,10 @@ packages/
  </picture>
 </a>
 
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get started.
+
 ## License
 
-MIT
+[MIT](./LICENSE)
