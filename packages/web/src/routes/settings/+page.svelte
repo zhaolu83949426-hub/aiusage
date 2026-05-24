@@ -260,9 +260,7 @@
       })
       // Update global stores immediately
       displayCurrency.set(currency.displayCurrency)
-      if (currency.exchangeRate) {
-        exchangeRate.set(Number(currency.exchangeRate))
-      }
+      exchangeRate.set(currency.exchangeRate ? Number(currency.exchangeRate) : cachedRate)
       currencySaved = true
       setTimeout(() => { currencySaved = false }, 2000)
     } catch (e) {
