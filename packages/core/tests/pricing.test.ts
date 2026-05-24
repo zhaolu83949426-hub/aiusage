@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { PRICE_TABLE, calculateCost, resolvePrice, FALLBACK_RATE } from '../src/pricing.js'
+import { PRICE_TABLE, calculateCost, resolvePrice } from '../src/pricing.js'
+import { FALLBACK_RATE } from '../src/exchange-rate.js'
 
 describe('PRICE_TABLE', () => {
   it('contains expected models', () => {

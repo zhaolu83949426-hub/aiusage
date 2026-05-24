@@ -187,7 +187,7 @@ export function resolvePrice(model: string): PriceEntry | undefined {
   return bestEntry
 }
 
-export const FALLBACK_RATE = 0.137  // CNY → USD
+import { FALLBACK_RATE } from './exchange-rate.js'
 
 export function calculateCost(
   model: string,
