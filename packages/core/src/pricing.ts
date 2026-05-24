@@ -45,7 +45,7 @@ export const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = {
   'moonshot-v1-128k':      { input: 14.4,  output: 36.0,                    currency: 'CNY' },
   'moonshot-v1-32k':       { input: 7.2,   output: 21.6,                    currency: 'CNY' },
   'moonshot-v1-8k':        { input: 1.44,  output: 14.4,                    currency: 'CNY' },
-  // GLM (Z.ai / Zhipu AI) — https://docs.z.ai/guides/overview/pricing
+  // GLM (Z.ai / Zhipu AI) — https://docs.z.ai/guides/overview/pricing — TODO: verify against official pricing
   'glm-5.1':               { input: 10.0,  output: 32.0,                    currency: 'CNY' },
   'glm-5p1':               { input: 10.0,  output: 32.0,                    currency: 'CNY' },  // Fireworks alias (accounts/fireworks/models/glm-5p1)
   'glm-5-turbo':           { input: 8.5,   output: 29.0,                    currency: 'CNY' },
@@ -97,10 +97,10 @@ export const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = {
   'doubao-seed-1.6':       { input: 0.84,  output: 8.4,                     currency: 'CNY' },
   'doubao-1.5-pro':        { input: 0.84,  output: 2.1,                     currency: 'CNY' },
   'doubao-1.5-lite':       { input: 0.32,  output: 0.63,                    currency: 'CNY' },
-  // Hunyuan (Tencent) — https://cloud.tencent.com/document/product/1729
+  // Hunyuan (Tencent) — https://cloud.tencent.com/document/product/1729 — TODO: verify against official pricing
   'hunyuan-t1':            { input: 0.48,  output: 1.87,  cacheRead: 0.21,  currency: 'CNY' },
   'hunyuan-a13b':          { input: 1.0,   output: 4.1,                     currency: 'CNY' },
-  // ERNIE (Baidu) — https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf
+  // ERNIE (Baidu) — https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf — TODO: verify against official pricing
   'ernie-4.5-300b':        { input: 2.0,   output: 6.5,                     currency: 'CNY' },
   'ernie-4.5-21b':         { input: 0.5,   output: 2.0,                     currency: 'CNY' },
   'ernie-x1':              { input: 2.0,   output: 8.0,                     currency: 'CNY' },

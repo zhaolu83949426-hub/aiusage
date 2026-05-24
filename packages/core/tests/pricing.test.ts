@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PRICE_TABLE, calculateCost, resolvePrice } from '../src/pricing.js'
+import { PRICE_TABLE, calculateCost, resolvePrice, FALLBACK_RATE } from '../src/pricing.js'
 
 describe('PRICE_TABLE', () => {
   it('contains expected models', () => {
@@ -163,7 +163,7 @@ describe('calculateCost', () => {
       thinkingTokens: 0,
     })
     // CNY cost: 0.0252, USD cost: 0.0252 * 0.137 = 0.0034524
-    expect(cost).toBeCloseTo(0.0252 * 0.137, 6)
+    expect(cost).toBeCloseTo(0.0252 * FALLBACK_RATE, 6)
   })
 
   it('does not convert USD model even when exchangeRate is provided', () => {
