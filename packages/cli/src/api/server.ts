@@ -901,6 +901,9 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
               'qoder-db': rest.sources?.['qoder-db'] ?? null,
             },
             sync: rest.sync ?? null,
+            displayCurrency: rest.displayCurrency ?? 'USD',
+            exchangeRate: rest.exchangeRate ?? null,
+            exchangeRateCache: rest.exchangeRateCache ?? null,
             credentialKeys: credentials ? Object.keys(credentials) : [],
             hostname: hostname(),
             platform: osPlatform,
@@ -929,6 +932,23 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
                 delete existing.weekStart
               }
             }
+            if ('displayCurrency' in update) {
+              const dc = update.displayCurrency
+              if (dc === 'USD' || dc === 'CNY') {
+                existing.displayCurrency = dc
+              } else {
+                delete existing.displayCurrency
+              }
+            }
+            if ('exchangeRate' in update) {
+              const er = update.exchangeRate
+              if (er != null && typeof er === 'number' && er > 0) {
+                existing.exchangeRate = er
+              } else {
+                delete existing.exchangeRate
+              }
+            }
+
             if ('dashboardPollInterval' in update) {
               if (!update.dashboardPollInterval) delete existing.dashboardPollInterval
               else existing.dashboardPollInterval = Number(update.dashboardPollInterval)
