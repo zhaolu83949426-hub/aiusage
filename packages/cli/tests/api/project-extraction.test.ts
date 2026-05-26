@@ -4,31 +4,31 @@ import { extractProject, extractProjectFromCwd } from '../../src/api/project-ext
 describe('extractProject', () => {
   it('keeps existing claude project decoding behavior', () => {
     expect(
-      extractProject('/Users/tjh/.claude/projects/-Users-tjh-WebstormProjects-aiusage/session.jsonl')
-    ).toBe('aiusage')
+      extractProject('/Users/alice/.claude/projects/-Users-alice-WebstormProjects-myapp/session.jsonl')
+    ).toBe('myapp')
   })
 
   it('falls back to a readable parent directory for generic local paths', () => {
     expect(
-      extractProject('/Users/tjh/worktrees/aiusage/sessions/abc123.jsonl')
-    ).toBe('aiusage')
+      extractProject('/Users/alice/worktrees/myapp/sessions/abc123.jsonl')
+    ).toBe('myapp')
   })
 
   it('skips generic trailing directories such as logs and data', () => {
     expect(
-      extractProject('/Users/tjh/projects/aiusage/data/logs/run.jsonl')
-    ).toBe('aiusage')
+      extractProject('/Users/alice/projects/myapp/data/logs/run.jsonl')
+    ).toBe('myapp')
   })
 
   it('extracts qoder project names from session segment paths', () => {
     expect(
-      extractProject('/Users/example/.qoder/logs/sessions/-Users-example-code-aiusage/session-1/segments/2026-05-24T02-03-23.jsonl')
-    ).toBe('code/aiusage')
+      extractProject('/Users/example/.qoder/logs/sessions/-Users-example-code-myproject/session-1/segments/2026-05-24T02-03-23.jsonl')
+    ).toBe('code/myproject')
   })
 
   it('joins multi-level claude project paths with / not -', () => {
     expect(
-      extractProject('/Users/tjh/.claude/projects/-Users-tjh-WebstormProjects-myorg-myproject/session.jsonl')
+      extractProject('/Users/alice/.claude/projects/-Users-alice-WebstormProjects-myorg-myproject/session.jsonl')
     ).toBe('myorg/myproject')
   })
 
@@ -45,19 +45,19 @@ describe('extractProject', () => {
 
 describe('extractProjectFromCwd', () => {
   it('strips WebstormProjects workspace root', () => {
-    expect(extractProjectFromCwd('/Users/tjh/WebstormProjects/ai-bidding-assistant')).toBe('ai-bidding-assistant')
+    expect(extractProjectFromCwd('/Users/alice/WebstormProjects/myapp')).toBe('myapp')
   })
 
   it('returns project root even when cwd is a subdirectory', () => {
-    expect(extractProjectFromCwd('/Users/tjh/WebstormProjects/aiusage/packages/cli')).toBe('aiusage')
+    expect(extractProjectFromCwd('/Users/alice/WebstormProjects/myapp/packages/cli')).toBe('myapp')
   })
 
   it('strips Documents workspace root', () => {
-    expect(extractProjectFromCwd('/Users/tjh/Documents/重庆邮电大学/课程/作业')).toBe('重庆邮电大学')
+    expect(extractProjectFromCwd('/Users/alice/Documents/org-name/course/homework')).toBe('org-name')
   })
 
   it('handles path without a workspace root', () => {
-    expect(extractProjectFromCwd('/Users/tjh/Typora/notes')).toBe('Typora')
+    expect(extractProjectFromCwd('/Users/alice/Typora/notes')).toBe('Typora')
   })
 
   it('returns unknown for empty cwd', () => {
@@ -65,6 +65,6 @@ describe('extractProjectFromCwd', () => {
   })
 
   it('handles Windows-style paths', () => {
-    expect(extractProjectFromCwd('C:/Users/tjh/WebstormProjects/myproject')).toBe('myproject')
+    expect(extractProjectFromCwd('C:/Users/alice/WebstormProjects/myproject')).toBe('myproject')
   })
 })
