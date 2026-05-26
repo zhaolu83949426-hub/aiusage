@@ -5,7 +5,7 @@ import type Database from 'better-sqlite3'
 import { calculateCost, getPriceTable, setPriceOverride, removePriceOverride, getUserOverrides, DEFAULT_PRICE_TABLE, resolvePrice, inferProvider, normalizeQoderModel, resolveExchangeRate, fetchExchangeRate, type PriceEntry } from '@aiusage/core'
 import { loadConfig, saveConfig, loadCredential } from '../config.js'
 import type { Config, SourcesConfig, SyncConfig } from '../config.js'
-import { extractProject } from './project-extraction.js'
+import { extractProject, extractProjectFromCwd } from './project-extraction.js'
 import { getDefaultSourcePaths } from '../commands/parse.js'
 import type { SyncStartResult, SyncStatusSnapshot } from '../sync/runtime.js'
 import { queryAllQuotas } from '../quota.js'
@@ -766,11 +766,26 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           GROUP BY source_file ORDER BY totalTokens DESC
         `).all({ ...dr.params, ...tf.params }) as any[]
 
-        // Aggregate by project
-        const projectMap: Record<string, { sessions: number; tokens: number; cost: number }> = {}
+        // Build a cwd inference map for Claude Code paths: encoded project dir → cwd.
+        // Records without cwd can inherit it from another session in the same project directory.
+        const cwdByEncodedDir: Record<string, string> = {}
         for (const row of rows) {
-          const project = row.cwd ? path.basename(row.cwd) : extractProject(row.source_file)
-          if (!projectMap[project]) projectMap[project] = { sessions: 0, tokens: 0, cost: 0 }
+          if (row.cwd) {
+            const m = (row.source_file as string).replace(/\\/g, '/').match(/\.claude\/projects\/([^/]+)/)
+            if (m && !cwdByEncodedDir[m[1]]) cwdByEncodedDir[m[1]] = row.cwd
+          }
+        }
+
+        // Aggregate by project
+        const projectMap: Record<string, { sessions: number; tokens: number; cost: number; fullPath: string }> = {}
+        for (const row of rows) {
+          let effectiveCwd: string = row.cwd || ''
+          if (!effectiveCwd) {
+            const m = (row.source_file as string).replace(/\\/g, '/').match(/\.claude\/projects\/([^/]+)/)
+            if (m) effectiveCwd = cwdByEncodedDir[m[1]] || ''
+          }
+          const project = effectiveCwd ? extractProjectFromCwd(effectiveCwd) : extractProject(row.source_file)
+          if (!projectMap[project]) projectMap[project] = { sessions: 0, tokens: 0, cost: 0, fullPath: effectiveCwd || row.source_file }
           projectMap[project].sessions += row.sessionCount
           projectMap[project].tokens += row.totalTokens
           projectMap[project].cost += row.cost
@@ -784,6 +799,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
             tokens: data.tokens,
             cost: data.cost,
             percentage: Math.round((data.tokens / totalTokens) * 1000) / 10,
+            fullPath: data.fullPath,
           }))
           .sort((a, b) => b.tokens - a.tokens)
 

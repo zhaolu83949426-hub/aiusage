@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractProject } from '../../src/api/project-extraction.js'
+import { extractProject, extractProjectFromCwd } from '../../src/api/project-extraction.js'
 
 describe('extractProject', () => {
   it('keeps existing claude project decoding behavior', () => {
@@ -40,5 +40,31 @@ describe('extractProject', () => {
 
   it('returns unknown for empty sourceFile', () => {
     expect(extractProject('')).toBe('unknown')
+  })
+})
+
+describe('extractProjectFromCwd', () => {
+  it('strips WebstormProjects workspace root', () => {
+    expect(extractProjectFromCwd('/Users/tjh/WebstormProjects/ai-bidding-assistant')).toBe('ai-bidding-assistant')
+  })
+
+  it('returns project root even when cwd is a subdirectory', () => {
+    expect(extractProjectFromCwd('/Users/tjh/WebstormProjects/aiusage/packages/cli')).toBe('aiusage')
+  })
+
+  it('strips Documents workspace root', () => {
+    expect(extractProjectFromCwd('/Users/tjh/Documents/重庆邮电大学/课程/作业')).toBe('重庆邮电大学')
+  })
+
+  it('handles path without a workspace root', () => {
+    expect(extractProjectFromCwd('/Users/tjh/Typora/notes')).toBe('Typora')
+  })
+
+  it('returns unknown for empty cwd', () => {
+    expect(extractProjectFromCwd('')).toBe('unknown')
+  })
+
+  it('handles Windows-style paths', () => {
+    expect(extractProjectFromCwd('C:/Users/tjh/WebstormProjects/myproject')).toBe('myproject')
   })
 })

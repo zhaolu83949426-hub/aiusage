@@ -1,5 +1,38 @@
 import path from 'node:path'
 
+// Workspace root directories that sit between the home dir and the actual project.
+// The first path segment that is NOT in this set is treated as the project name.
+const CWD_WORKSPACE_ROOTS = new Set([
+  'WebstormProjects', 'Documents', 'Projects', 'workspace', 'Workspace',
+  'dev', 'code', 'repos', 'Developer', 'src',
+])
+
+/**
+ * Extract a project name from a full working-directory path.
+ * Strips the home-directory prefix and any well-known workspace root directories,
+ * then returns the first meaningful path segment as the project name.
+ *
+ * Examples:
+ *   /Users/tjh/WebstormProjects/ai-bidding-assistant  → ai-bidding-assistant
+ *   /Users/tjh/WebstormProjects/aiusage/packages/cli  → aiusage
+ *   /Users/tjh/Documents/重庆邮电大学/课程/作业        → 重庆邮电大学
+ *   /Users/tjh/Documents/Typora/document/拂晓集        → Typora
+ */
+export function extractProjectFromCwd(cwd: string): string {
+  if (!cwd) return 'unknown'
+  const normalized = cwd.replace(/\\/g, '/')
+  // Strip home-dir prefix: /Users/<name>/, /home/<name>/, /root/, C:/Users/<name>/
+  const withoutHome = normalized
+    .replace(/^[A-Za-z]:\/(?:Users|home)\/[^/]+\//, '')
+    .replace(/^\/(Users|home)\/[^/]+\//, '')
+    .replace(/^\/root\//, '')
+  const parts = withoutHome.split('/').filter(Boolean)
+  for (const part of parts) {
+    if (!CWD_WORKSPACE_ROOTS.has(part)) return part
+  }
+  return parts[parts.length - 1] ?? 'unknown'
+}
+
 const GENERIC_DIRECTORY_NAMES = new Set([
   'sessions',
   'session',

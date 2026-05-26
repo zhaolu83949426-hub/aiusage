@@ -55,7 +55,12 @@
     {#each data.projects as proj, i}
       <div class="row animate-row">
         <span class="rank mono">#{i + 1}</span>
-        <span class="name mono" title={proj.name}>{proj.name}</span>
+        <span class="name mono" title={proj.fullPath || proj.name}>
+          {proj.name}
+          {#if proj.fullPath && proj.fullPath !== proj.name}
+            <span class="path">{proj.fullPath}</span>
+          {/if}
+        </span>
         <div class="bar-container">
           <div class="bar" style="width: {proj.percentage}%"></div>
         </div>
@@ -94,6 +99,17 @@
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .path {
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
