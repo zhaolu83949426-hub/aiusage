@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import { readFileSync, readdirSync, statSync, existsSync, openSync, readSync, closeSync } from 'node:fs'
 import { join, extname } from 'node:path'
 import { homedir, hostname, platform } from 'node:os'
-import { Aggregator, resolveExchangeRate, type Tool } from '@aiusage/core'
+import { Aggregator, resolveExchangeRate, generateToolCallId, type Tool } from '@aiusage/core'
 import { insertRecord } from '../db/records.js'
 import { insertToolCall } from '../db/tool-calls.js'
 import { getState } from '../init.js'
@@ -554,7 +554,61 @@ export async function runParse(db: Database.Database, filterTool?: string, optio
     } catch {}
   }
 
+  // Backfill legacy tool_calls with name='Skill' to extract the specific skill name.
+  // Historical rows were stored before the parser learned to read block.input.skill.
+  backfillSkillNames(db)
+
   return { parsedCount, toolCallCount, errors }
+}
+
+function backfillSkillNames(db: Database.Database): void {
+  const rows = db.prepare(`
+    SELECT tc.id, tc.record_id, tc.ts, tc.call_index,
+           r.source_file, r.line_offset
+    FROM tool_calls tc
+    JOIN records r ON r.id = tc.record_id
+    WHERE tc.name = 'Skill'
+      AND r.source_file NOT LIKE 'synced/%'
+  `).all() as { id: string; record_id: string; ts: number; call_index: number; source_file: string; line_offset: number }[]
+
+  if (rows.length === 0) return
+
+  const updateStmt = db.prepare('UPDATE tool_calls SET id = ?, name = ? WHERE id = ?')
+
+  for (const row of rows) {
+    try {
+      const fd = openSync(row.source_file, 'r')
+      const buf = Buffer.alloc(65536)
+      const n = readSync(fd, buf, 0, buf.length, row.line_offset)
+      closeSync(fd)
+
+      let lineEnd = 0
+      while (lineEnd < n && buf[lineEnd] !== 0x0a) lineEnd++
+      const line = buf.subarray(0, lineEnd).toString('utf8')
+
+      const parsed = JSON.parse(line)
+      if (!Array.isArray(parsed.message?.content)) continue
+
+      let callIndex = 0
+      let skillArg = ''
+      for (const block of parsed.message.content) {
+        if (block.type !== 'tool_use') continue
+        if (callIndex === row.call_index) {
+          if (block.name === 'Skill') {
+            skillArg = typeof block.input?.skill === 'string' ? block.input.skill.trim() : ''
+          }
+          break
+        }
+        callIndex++
+      }
+
+      const storedName = skillArg ? `skill__${skillArg}` : 'skill__unknown'
+      const newId = generateToolCallId(row.record_id, storedName, row.ts, row.call_index)
+      updateStmt.run(newId, storedName, row.id)
+    } catch {
+      // File missing or line unreadable — leave this row as-is
+    }
+  }
 }
 
 export function getDefaultSourcePaths(): Record<string, string> {
