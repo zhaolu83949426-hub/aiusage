@@ -283,6 +283,27 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           GROUP BY tc.name ORDER BY count DESC LIMIT 10
         `).all({ ...drJoin.params, ...df.params, ...tfJoin.params }) as any[]
 
+        const topMcpServersRaw = db.prepare(`
+          SELECT tc.name, COUNT(*) AS count
+          FROM tool_calls tc
+          JOIN records r ON r.id = tc.record_id
+          WHERE tc.name LIKE 'mcp__%'
+            AND INSTR(SUBSTR(tc.name, 6), '__') > 0
+            ${dfJoin} ${drJoin.where} ${tfJoin.where}
+          GROUP BY tc.name ORDER BY count DESC
+        `).all({ ...drJoin.params, ...df.params, ...tfJoin.params }) as any[]
+
+        // Aggregate by server (multiple mcp__server__X tools collapse to one server)
+        const mcpServerMap = new Map<string, number>()
+        for (const row of topMcpServersRaw) {
+          const server = parseMcpName(row.name).server
+          mcpServerMap.set(server, (mcpServerMap.get(server) ?? 0) + row.count)
+        }
+        const topMcpServers = Array.from(mcpServerMap.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([server, count]) => ({ server, count }))
+
         json(res, {
           inputTokens: totals.inputTokens,
           outputTokens: totals.outputTokens,
@@ -295,6 +316,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           totalSessions: totals.totalSessions,
           byTool,
           topToolCalls,
+          topMcpServers,
         })
         return
       }
