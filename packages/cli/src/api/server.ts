@@ -704,7 +704,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           return
         }
 
-        const tf = getToolFilter(tool)
+        const tf = getToolFilter(tool, 'r')
         const params: Record<string, unknown> = { ...dr.params, ...tf.params }
 
         const totalRow = db.prepare(`
