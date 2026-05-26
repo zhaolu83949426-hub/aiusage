@@ -13,10 +13,10 @@ const CWD_WORKSPACE_ROOTS = new Set([
  * then returns the first meaningful path segment as the project name.
  *
  * Examples:
- *   /Users/tjh/WebstormProjects/ai-bidding-assistant  → ai-bidding-assistant
- *   /Users/tjh/WebstormProjects/aiusage/packages/cli  → aiusage
- *   /Users/tjh/Documents/重庆邮电大学/课程/作业        → 重庆邮电大学
- *   /Users/tjh/Documents/Typora/document/拂晓集        → Typora
+ *   /Users/alice/WebstormProjects/my-project          → my-project
+ *   /Users/alice/WebstormProjects/my-project/pkg/cli  → my-project
+ *   /Users/alice/Documents/org-name/course/homework   → org-name
+ *   /Users/alice/Documents/AppName/notes              → AppName
  */
 export function extractProjectFromCwd(cwd: string): string {
   if (!cwd) return 'unknown'
