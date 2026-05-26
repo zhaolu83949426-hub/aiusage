@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 function classifyToolCall(name: string): 'mcp' | 'skill' | 'builtin' {
   if (name.startsWith('mcp__')) return 'mcp'
-  if (name === 'Skill') return 'skill'
+  if (name.startsWith('skill__') || name === 'Skill') return 'skill'
   return 'builtin'
 }
 
@@ -17,10 +17,15 @@ function parseMcpName(name: string): { server: string; action: string; display: 
   }
 }
 
+function getSkillDisplayName(name: string): string {
+  if (name.startsWith('skill__')) return name.slice('skill__'.length)
+  return name
+}
+
 function getToolTypeFilter(toolType: string | null): string {
   if (toolType === 'mcp') return "AND tc.name LIKE 'mcp__%'"
-  if (toolType === 'skill') return "AND tc.name = 'Skill'"
-  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name != 'Skill'"
+  if (toolType === 'skill') return "AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')"
+  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'"
   return ''
 }
 
@@ -30,7 +35,12 @@ describe('classifyToolCall', () => {
     expect(classifyToolCall('mcp__filesystem__read_file')).toBe('mcp')
   })
 
-  it('classifies exact "Skill" as skill', () => {
+  it('classifies skill__ prefix as skill', () => {
+    expect(classifyToolCall('skill__superpowers:brainstorming')).toBe('skill')
+    expect(classifyToolCall('skill__unknown')).toBe('skill')
+  })
+
+  it('classifies legacy exact "Skill" as skill (backward compat)', () => {
     expect(classifyToolCall('Skill')).toBe('skill')
   })
 
@@ -68,17 +78,28 @@ describe('parseMcpName', () => {
   })
 })
 
+describe('getSkillDisplayName', () => {
+  it('strips skill__ prefix', () => {
+    expect(getSkillDisplayName('skill__superpowers:brainstorming')).toBe('superpowers:brainstorming')
+    expect(getSkillDisplayName('skill__unknown')).toBe('unknown')
+  })
+
+  it('returns legacy Skill name unchanged', () => {
+    expect(getSkillDisplayName('Skill')).toBe('Skill')
+  })
+})
+
 describe('getToolTypeFilter', () => {
   it('returns mcp filter for mcp type', () => {
     expect(getToolTypeFilter('mcp')).toBe("AND tc.name LIKE 'mcp__%'")
   })
 
-  it('returns skill filter for skill type', () => {
-    expect(getToolTypeFilter('skill')).toBe("AND tc.name = 'Skill'")
+  it('returns skill filter covering both skill__ prefix and legacy Skill', () => {
+    expect(getToolTypeFilter('skill')).toBe("AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')")
   })
 
-  it('returns exclusion filter for builtin type', () => {
-    expect(getToolTypeFilter('builtin')).toBe("AND tc.name NOT LIKE 'mcp__%' AND tc.name != 'Skill'")
+  it('returns exclusion filter for builtin type excluding mcp, skill__ and Skill', () => {
+    expect(getToolTypeFilter('builtin')).toBe("AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'")
   })
 
   it('returns empty string for null (all types)', () => {

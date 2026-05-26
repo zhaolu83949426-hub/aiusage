@@ -78,7 +78,7 @@ function getToolFilter(tool: string | null, prefix = ''): { where: string; param
 
 function classifyToolCall(name: string): 'mcp' | 'skill' | 'builtin' {
   if (name.startsWith('mcp__')) return 'mcp'
-  if (name === 'Skill') return 'skill'
+  if (name.startsWith('skill__') || name === 'Skill') return 'skill'
   return 'builtin'
 }
 
@@ -95,8 +95,8 @@ function parseMcpName(name: string): { server: string; action: string; display: 
 
 function getToolTypeFilter(toolType: string | null): string {
   if (toolType === 'mcp') return "AND tc.name LIKE 'mcp__%'"
-  if (toolType === 'skill') return "AND tc.name = 'Skill'"
-  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name != 'Skill'"
+  if (toolType === 'skill') return "AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')"
+  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'"
   return ''
 }
 
@@ -563,11 +563,16 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
 
         const toolCalls = rows.map(r => {
           const type = classifyToolCall(r.name)
-          const parsed = type === 'mcp' ? parseMcpName(r.name) : null
+          const mcpParsed = type === 'mcp' ? parseMcpName(r.name) : null
+          const displayName = mcpParsed
+            ? mcpParsed.display
+            : (type === 'skill' && r.name.startsWith('skill__'))
+              ? r.name.slice('skill__'.length)
+              : r.name
           return {
             name: r.name,
-            displayName: parsed ? parsed.display : r.name,
-            mcpServer: parsed ? parsed.server : null,
+            displayName,
+            mcpServer: mcpParsed ? mcpParsed.server : null,
             type,
             count: r.count,
             percentage: Math.round((r.count / total) * 1000) / 10,
