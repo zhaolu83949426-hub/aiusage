@@ -578,6 +578,102 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
         return
       }
 
+      // ── /api/sessions/:sessionId ──────────────────────────────────
+      if (url.pathname.startsWith('/api/sessions/') && req.method === 'GET') {
+        const sessionId = decodeURIComponent(url.pathname.slice('/api/sessions/'.length))
+        if (!sessionId) {
+          json(res, { error: { code: 'INVALID_PARAM', message: 'Missing sessionId' } }, 400)
+          return
+        }
+
+        const toolParam = url.searchParams.get('tool')
+        const deviceParam = url.searchParams.get('device')
+
+        // Build optional filters
+        const toolClause = toolParam ? 'AND tool = @tool' : ''
+        const deviceClause = deviceParam ? 'AND device_instance_id = @device' : ''
+        const filterParams: Record<string, unknown> = { sessionId }
+        if (toolParam) filterParams.tool = toolParam
+        if (deviceParam) filterParams.device = deviceParam
+
+        // Session metadata
+        const meta = db.prepare(`
+          SELECT session_id AS sessionId,
+                 tool, model,
+                 MIN(ts) AS firstTs,
+                 MAX(ts) AS lastTs,
+                 MAX(ts) - MIN(ts) AS duration,
+                 SUM(input_tokens) AS inputTokens,
+                 SUM(output_tokens) AS outputTokens,
+                 SUM(cache_read_tokens) AS cacheReadTokens,
+                 SUM(cache_write_tokens) AS cacheWriteTokens,
+                 SUM(thinking_tokens) AS thinkingTokens,
+                 SUM(cost) AS cost,
+                 COUNT(*) AS recordCount
+          FROM records
+          WHERE session_id = @sessionId ${toolClause} ${deviceClause}
+          GROUP BY session_id, tool, model
+          ORDER BY MIN(ts) ASC
+          LIMIT 1
+        `).get(filterParams) as any
+
+        if (!meta) {
+          json(res, { error: { code: 'NOT_FOUND', message: 'Session not found' } }, 404)
+          return
+        }
+
+        // Records in ascending order
+        const records = db.prepare(`
+          SELECT id, ts, model,
+                 input_tokens AS inputTokens,
+                 output_tokens AS outputTokens,
+                 cache_read_tokens AS cacheReadTokens,
+                 cache_write_tokens AS cacheWriteTokens,
+                 thinking_tokens AS thinkingTokens,
+                 cost
+          FROM records
+          WHERE session_id = @sessionId ${toolClause} ${deviceClause}
+          ORDER BY ts ASC
+        `).all(filterParams) as any[]
+
+        // Tool calls for all records in this session
+        const rToolClause = toolParam ? 'AND r.tool = @tool' : ''
+        const rDeviceClause = deviceParam ? 'AND r.device_instance_id = @device' : ''
+        const toolCallRows = db.prepare(`
+          SELECT tc.record_id AS recordId, tc.name, tc.ts, tc.call_index AS callIndex
+          FROM tool_calls tc
+          JOIN records r ON r.id = tc.record_id
+          WHERE r.session_id = @sessionId ${rToolClause} ${rDeviceClause}
+          ORDER BY tc.record_id, tc.call_index ASC
+        `).all(filterParams) as any[]
+
+        // Group tool calls by record_id
+        const toolCallsByRecord: Record<string, any[]> = {}
+        for (const tc of toolCallRows) {
+          if (!toolCallsByRecord[tc.recordId]) toolCallsByRecord[tc.recordId] = []
+          const type = classifyToolCall(tc.name)
+          const parsed = type === 'mcp' ? parseMcpName(tc.name) : null
+          toolCallsByRecord[tc.recordId].push({
+            name: tc.name,
+            displayName: parsed ? parsed.display : tc.name,
+            type,
+            ts: tc.ts,
+            callIndex: tc.callIndex,
+          })
+        }
+
+        const toolCallCount = toolCallRows.length
+
+        json(res, {
+          session: { ...meta, toolCallCount },
+          records: records.map(r => ({
+            ...r,
+            toolCalls: toolCallsByRecord[r.id] ?? [],
+          })),
+        })
+        return
+      }
+
       // ── /api/sessions ─────────────────────────────────────────────
       if (url.pathname === '/api/sessions') {
         const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10))
