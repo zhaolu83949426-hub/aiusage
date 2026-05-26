@@ -94,9 +94,9 @@ function parseMcpName(name: string): { server: string; action: string; display: 
 }
 
 function getToolTypeFilter(toolType: string | null): string {
-  if (toolType === 'mcp') return "AND tc.name LIKE 'mcp__%'"
-  if (toolType === 'skill') return "AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')"
-  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'"
+  if (toolType === 'mcp') return "AND tc.name LIKE 'mcp\\_\\_%' ESCAPE '\\'"
+  if (toolType === 'skill') return "AND (tc.name LIKE 'skill\\_\\_%' ESCAPE '\\' OR tc.name = 'Skill')"
+  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp\\_\\_%' ESCAPE '\\' AND tc.name NOT LIKE 'skill\\_\\_%' ESCAPE '\\' AND tc.name != 'Skill'"
   return ''
 }
 
@@ -287,7 +287,7 @@ export function createApiServer(db: Database.Database, options?: ApiServerOption
           SELECT tc.name, COUNT(*) AS count
           FROM tool_calls tc
           JOIN records r ON r.id = tc.record_id
-          WHERE tc.name LIKE 'mcp__%'
+          WHERE tc.name LIKE 'mcp\\_\\_%' ESCAPE '\\'
             AND INSTR(SUBSTR(tc.name, 6), '__') > 0
             ${dfJoin} ${drJoin.where} ${tfJoin.where}
           GROUP BY tc.name ORDER BY count DESC

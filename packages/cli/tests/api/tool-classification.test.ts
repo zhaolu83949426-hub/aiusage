@@ -23,9 +23,9 @@ function getSkillDisplayName(name: string): string {
 }
 
 function getToolTypeFilter(toolType: string | null): string {
-  if (toolType === 'mcp') return "AND tc.name LIKE 'mcp__%'"
-  if (toolType === 'skill') return "AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')"
-  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'"
+  if (toolType === 'mcp') return "AND tc.name LIKE 'mcp\\_\\_%' ESCAPE '\\'"
+  if (toolType === 'skill') return "AND (tc.name LIKE 'skill\\_\\_%' ESCAPE '\\' OR tc.name = 'Skill')"
+  if (toolType === 'builtin') return "AND tc.name NOT LIKE 'mcp\\_\\_%' ESCAPE '\\' AND tc.name NOT LIKE 'skill\\_\\_%' ESCAPE '\\' AND tc.name != 'Skill'"
   return ''
 }
 
@@ -46,6 +46,10 @@ describe('classifyToolCall', () => {
 
   it('classifies SkillXYZ as builtin (not skill)', () => {
     expect(classifyToolCall('SkillX')).toBe('builtin')
+  })
+
+  it('classifies skill_view (single underscore) as builtin, not skill', () => {
+    expect(classifyToolCall('skill_view')).toBe('builtin')
   })
 
   it('classifies common tools as builtin', () => {
@@ -91,15 +95,15 @@ describe('getSkillDisplayName', () => {
 
 describe('getToolTypeFilter', () => {
   it('returns mcp filter for mcp type', () => {
-    expect(getToolTypeFilter('mcp')).toBe("AND tc.name LIKE 'mcp__%'")
+    expect(getToolTypeFilter('mcp')).toBe("AND tc.name LIKE 'mcp\\_\\_%' ESCAPE '\\'")
   })
 
   it('returns skill filter covering both skill__ prefix and legacy Skill', () => {
-    expect(getToolTypeFilter('skill')).toBe("AND (tc.name LIKE 'skill__%' OR tc.name = 'Skill')")
+    expect(getToolTypeFilter('skill')).toBe("AND (tc.name LIKE 'skill\\_\\_%' ESCAPE '\\' OR tc.name = 'Skill')")
   })
 
   it('returns exclusion filter for builtin type excluding mcp, skill__ and Skill', () => {
-    expect(getToolTypeFilter('builtin')).toBe("AND tc.name NOT LIKE 'mcp__%' AND tc.name NOT LIKE 'skill__%' AND tc.name != 'Skill'")
+    expect(getToolTypeFilter('builtin')).toBe("AND tc.name NOT LIKE 'mcp\\_\\_%' ESCAPE '\\' AND tc.name NOT LIKE 'skill\\_\\_%' ESCAPE '\\' AND tc.name != 'Skill'")
   })
 
   it('returns empty string for null (all types)', () => {
