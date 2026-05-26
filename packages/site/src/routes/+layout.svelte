@@ -1,0 +1,479 @@
+<script>
+  import { page } from '$app/stores'
+  import { lang } from '$lib/lang'
+
+  function toggleLang() {
+    lang.toggle()
+  }
+
+  $: isDocs = $page.url.pathname.startsWith('/docs')
+  $: zh = $lang === 'zh'
+</script>
+
+<svelte:head>
+  <title>AIUsage — {zh ? 'AI 编程用量分析平台' : 'AI Coding Usage Analytics'}</title>
+  <meta name="description" content={zh
+    ? '追踪 Claude Code、Codex、Cursor 等 AI 编程工具的 Token 用量、费用和使用模式。本地优先，隐私至上。'
+    : 'Track token consumption, costs, and usage patterns across Claude Code, Codex, Cursor, and more. Local-first, privacy-respecting.'
+  } />
+</svelte:head>
+
+<div class="site">
+  <!-- Desktop header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="site-brand">
+        <span class="brand-mark">⌘</span>
+        <span class="brand-text">AIUsage</span>
+      </a>
+
+      <nav class="site-nav">
+        <a href="/" class="nav-link" class:active={$page.url.pathname === '/'}>
+          {zh ? '首页' : 'Home'}
+        </a>
+        <a href="/docs" class="nav-link" class:active={$page.url.pathname.startsWith('/docs')}>
+          {zh ? '文档' : 'Docs'}
+        </a>
+        <a href="https://github.com/juliantanx/aiusage" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/package/@juliantanx/aiusage" class="nav-link" target="_blank" rel="noopener">npm</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="lang-toggle" on:click={toggleLang}>
+          {zh ? 'EN' : '中文'}
+        </button>
+        <a href="https://www.npmjs.com/package/@juliantanx/aiusage" class="header-cta" target="_blank" rel="noopener">
+          {zh ? '安装' : 'Install'}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile header -->
+  <div class="mobile-nav-bar">
+    <a href="/" class="site-brand">
+      <span class="brand-mark">⌘</span>
+      <span class="brand-text">AIUsage</span>
+    </a>
+    <div class="mobile-actions">
+      <button class="lang-toggle" on:click={toggleLang}>
+        {zh ? 'EN' : '中文'}
+      </button>
+    </div>
+  </div>
+
+  <main>
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="brand-mark">⌘</span>
+          <span class="brand-text">AIUsage</span>
+        </div>
+        <p class="footer-tagline">
+          {zh
+            ? '本地优先的 AI 编程用量分析平台'
+            : 'Local-first AI coding usage analytics'}
+        </p>
+        <div class="footer-badges">
+          <a href="https://www.npmjs.com/package/@juliantanx/aiusage" target="_blank" rel="noopener" class="badge-link">
+            <img src="https://img.shields.io/npm/v/@juliantanx/aiusage?style=flat-square&color=0d9488" alt="npm version" />
+          </a>
+          <a href="https://github.com/juliantanx/aiusage/blob/main/LICENSE" target="_blank" rel="noopener" class="badge-link">
+            <img src="https://img.shields.io/github/license/juliantanx/aiusage?style=flat-square" alt="license" />
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>{zh ? '产品' : 'Product'}</h4>
+          <a href="/">{zh ? '首页' : 'Home'}</a>
+          <a href="/docs">{zh ? '文档' : 'Documentation'}</a>
+          <a href="/docs#cli">{zh ? 'CLI 参考' : 'CLI Reference'}</a>
+        </div>
+        <div class="footer-col">
+          <h4>{zh ? '资源' : 'Resources'}</h4>
+          <a href="https://github.com/juliantanx/aiusage" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.npmjs.com/package/@juliantanx/aiusage" target="_blank" rel="noopener">npm — CLI</a>
+          <a href="https://www.npmjs.com/package/@juliantanx/aiusage-widget" target="_blank" rel="noopener">npm — Widget</a>
+          <a href="https://hub.docker.com/r/juliantanx/aiusage" target="_blank" rel="noopener">Docker Hub</a>
+        </div>
+        <div class="footer-col">
+          <h4>{zh ? '社区' : 'Community'}</h4>
+          <a href="https://github.com/juliantanx/aiusage/issues" target="_blank" rel="noopener">{zh ? '问题反馈' : 'Issues'}</a>
+          <a href="https://github.com/juliantanx/aiusage/pulls" target="_blank" rel="noopener">{zh ? '贡献代码' : 'Pull Requests'}</a>
+          <a href="https://github.com/juliantanx/aiusage/blob/main/CHANGELOG.md" target="_blank" rel="noopener">{zh ? '更新日志' : 'Changelog'}</a>
+        </div>
+        <div class="footer-col">
+          <h4>{zh ? '支持的工具' : 'Supported Tools'}</h4>
+          <span>Claude Code</span>
+          <span>Codex</span>
+          <span>Cursor</span>
+          <span>OpenClaw</span>
+          <span>OpenCode</span>
+          <span>Hermes</span>
+          <span>Qoder</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; {new Date().getFullYear()} AIUsage</span>
+      <span class="footer-sep">&middot;</span>
+      <span>MIT License</span>
+      <span class="footer-sep">&middot;</span>
+      <a href="https://github.com/juliantanx/aiusage" target="_blank" rel="noopener">GitHub</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="https://hub.docker.com/r/juliantanx/aiusage" target="_blank" rel="noopener">Docker</a>
+    </div>
+  </footer>
+</div>
+
+<style>
+  /* ── Design tokens ──────────────────────────────────────────────────────── */
+  :global(*) {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :global(html) {
+    scroll-behavior: smooth;
+    scroll-padding-top: 72px;
+  }
+
+  :global(body) {
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+
+  :global(:root) {
+    --bg:                oklch(0.985 0.004 85);
+    --bg-warm:           oklch(0.972 0.006 85);
+    --surface:           oklch(0.995 0.002 85);
+    --raised:            oklch(0.968 0.007 85);
+    --hover:             oklch(0.952 0.009 85);
+    --border-subtle:     oklch(0.915 0.009 85);
+    --border-medium:     oklch(0.86 0.011 85);
+    --text:              oklch(0.15 0.014 85);
+    --text-secondary:    oklch(0.38 0.016 85);
+    --text-muted:        oklch(0.55 0.013 85);
+    --accent:            oklch(0.52 0.14 165);
+    --accent-dim:        oklch(0.52 0.14 165 / 0.08);
+    --accent-hover:      oklch(0.47 0.15 165);
+    --blue:              oklch(0.52 0.16 250);
+    --blue-dim:          oklch(0.52 0.16 250 / 0.08);
+    --green:             oklch(0.58 0.18 155);
+    --green-dim:         oklch(0.58 0.18 155 / 0.08);
+    --purple:            oklch(0.55 0.17 300);
+    --purple-dim:        oklch(0.55 0.17 300 / 0.08);
+    --rose:              oklch(0.55 0.22 25);
+    --rose-dim:          oklch(0.55 0.22 25 / 0.08);
+    --amber:             oklch(0.68 0.15 85);
+    --amber-dim:         oklch(0.68 0.15 85 / 0.08);
+    --shadow-sm:         0 1px 2px oklch(0 0 0 / 0.04);
+    --shadow-md:         0 1px 3px oklch(0 0 0 / 0.06), 0 4px 12px oklch(0 0 0 / 0.03);
+    --shadow-lg:         0 4px 8px oklch(0 0 0 / 0.06), 0 12px 32px oklch(0 0 0 / 0.04);
+    --mono:              'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --content-width:     min(1320px, 92vw);
+  }
+
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: oklch(0.985 0.004 85 / 0.92);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .header-inner {
+    width: var(--content-width);
+    margin: 0 auto;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .site-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .brand-mark {
+    font-size: 1.15rem;
+    color: var(--accent);
+  }
+
+  .brand-text {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    background: var(--hover);
+  }
+
+  .nav-link.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+    font-weight: 600;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .lang-toggle {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 0.35rem 0.7rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .lang-toggle:hover {
+    color: var(--text);
+    border-color: var(--border-medium);
+  }
+
+  .header-cta {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: oklch(0.99 0.002 85);
+    background: var(--accent);
+    text-decoration: none;
+    padding: 0.45rem 1.1rem;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+
+  .header-cta:hover {
+    background: var(--accent-hover);
+  }
+
+  /* ── Mobile nav ─────────────────────────────────────────────────────────── */
+  .mobile-nav-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .mobile-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* ── Footer ─────────────────────────────────────────────────────────────── */
+  .site-footer {
+    position: relative;
+    z-index: 20;
+    background: var(--bg-warm);
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 4rem;
+  }
+
+  .footer-inner {
+    width: var(--content-width);
+    margin: 0 auto;
+    padding: 3rem 0 2rem;
+    display: grid;
+    grid-template-columns: 1.2fr 2fr;
+    gap: 3rem;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 1rem;
+  }
+
+  .footer-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .badge-link img {
+    height: 22px;
+    display: block;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .footer-col h4 {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 550;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .footer-col a,
+  .footer-col span {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 0.4rem;
+    transition: color 0.15s;
+  }
+
+  .footer-col a:hover {
+    color: var(--accent);
+  }
+
+  .footer-bottom {
+    width: var(--content-width);
+    margin: 0 auto;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .footer-bottom a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-bottom a:hover {
+    color: var(--accent);
+  }
+
+  .footer-sep {
+    opacity: 0.4;
+  }
+
+  /* ── Global typography ──────────────────────────────────────────────────── */
+  :global(h1, h2, h3, h4, h5, h6) {
+    line-height: 1.25;
+  }
+
+  :global(a) {
+    color: inherit;
+  }
+
+  :global(code) {
+    font-family: var(--mono);
+    font-size: 0.9em;
+  }
+
+  :global(pre) {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    background: oklch(0.15 0.014 85);
+    color: oklch(0.88 0.008 85);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    border: 1px solid oklch(0.23 0.015 85);
+  }
+
+  :global(pre code) {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /* ── Reduced motion ─────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    :global(*) {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    :global(html) {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* ── Responsive ─────────────────────────────────────────────────────────── */
+  @media (max-width: 800px) {
+    .site-header {
+      display: none;
+    }
+    .mobile-nav-bar {
+      display: flex;
+    }
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .footer-links {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

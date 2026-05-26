@@ -6,6 +6,7 @@
 [![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Website](https://img.shields.io/badge/Website-aiusage.jtanx.com-blue.svg)](https://aiusage.jtanx.com)
 
 **aiusage** 为你提供一个本地优先的统一视图，用来理解 AI 编程工具的使用情况：token、成本、模型分布、工具活跃度、项目、会话，以及按需启用的多设备同步。支持 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder。
 

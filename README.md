@@ -6,6 +6,7 @@
 [![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Website](https://img.shields.io/badge/Website-aiusage.jtanx.com-blue.svg)](https://aiusage.jtanx.com)
 
 **aiusage** gives you one local-first place to understand how your AI coding tools are being used: tokens, cost, model mix, tool activity, projects, sessions, and multi-machine sync when you need it. Supports Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
 
