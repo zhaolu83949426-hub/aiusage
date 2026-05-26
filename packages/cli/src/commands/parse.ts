@@ -567,7 +567,7 @@ function backfillSkillNames(db: Database.Database): void {
            r.source_file, r.line_offset
     FROM tool_calls tc
     JOIN records r ON r.id = tc.record_id
-    WHERE tc.name = 'Skill'
+    WHERE (tc.name = 'Skill' OR tc.name = 'skill__unknown')
       AND r.source_file NOT LIKE 'synced/%'
   `).all() as { id: string; record_id: string; ts: number; call_index: number; source_file: string; line_offset: number }[]
 
