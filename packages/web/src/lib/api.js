@@ -47,6 +47,10 @@ export async function fetchSessions(params) {
   }))
 }
 
+export async function fetchSessionDetail(sessionId, params = {}) {
+  return apiFetch(buildUrl(`/api/sessions/${encodeURIComponent(sessionId)}`, params))
+}
+
 export async function fetchProjects(params) {
   return apiFetch(buildUrl('/api/projects', params))
 }

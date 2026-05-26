@@ -12,6 +12,14 @@
   let page = 1
   const pageSize = 50
 
+  function formatDuration(ms) {
+    if (!ms || ms < 1000) return '< 1s'
+    const s = Math.floor(ms / 1000)
+    const m = Math.floor(s / 60)
+    if (m === 0) return `${s}s`
+    return `${m}m ${s % 60}s`
+  }
+
   async function loadData() {
     loading = true
     error = null
@@ -40,6 +48,14 @@
 
   function prevPage() {
     if (page > 1) page--
+  }
+
+  function goToDetail(session) {
+    const params = new URLSearchParams()
+    if ($selectedTool) params.set('tool', $selectedTool)
+    if ($selectedDevice) params.set('device', $selectedDevice)
+    const qs = params.toString()
+    window.location.href = `/sessions/${encodeURIComponent(session.sessionId)}${qs ? '?' + qs : ''}`
   }
 </script>
 
@@ -75,6 +91,8 @@
           <th>{$t('sessions.time')}</th>
           <th>{$t('sessions.tool')}</th>
           <th>{$t('sessions.model')}</th>
+          <th>{$t('sessions.duration')}</th>
+          <th>{$t('sessions.toolCalls')}</th>
           <th>{$t('sessions.input')}</th>
           <th>{$t('sessions.output')}</th>
           <th>{$t('sessions.cost')}</th>
@@ -82,10 +100,14 @@
       </thead>
       <tbody>
         {#each data.sessions as session}
-          <tr>
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-interactive-element-to-noninteractive-role -->
+          <tr class="clickable" on:click={() => goToDetail(session)}>
             <td class="mono">{formatDate(session.ts)}</td>
             <td>{session.tool}</td>
             <td class="mono model">{session.model}</td>
+            <td class="mono muted">{formatDuration(session.duration)}</td>
+            <td class="mono">{session.toolCallCount ?? 0}</td>
             <td class="mono green">{formatTokens(session.inputTokens)}</td>
             <td class="mono blue">{formatTokens(session.outputTokens)}</td>
             <td class="mono accent">{formatCost(session.cost)}</td>
@@ -103,9 +125,15 @@
 {/if}
 
 <style>
+  .clickable {
+    cursor: pointer;
+  }
   .model {
     font-size: 0.8rem;
     color: var(--text);
+  }
+  .muted {
+    color: var(--text-muted);
   }
   .pagination {
     display: flex;
