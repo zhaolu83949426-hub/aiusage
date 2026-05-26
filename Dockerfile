@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 # Only build server packages (skip Electron widget)
-RUN pnpm --filter @aiusage/core build && pnpm --filter @juliantanx/aiusage build && pnpm --filter @aiusage/web build
+RUN pnpm --filter @aiusage/core build && pnpm --filter @aiusage/web build && pnpm --filter @juliantanx/aiusage build
 
 VOLUME /root/.aiusage
 EXPOSE 3847
