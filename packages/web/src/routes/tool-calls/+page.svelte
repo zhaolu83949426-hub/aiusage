@@ -9,12 +9,25 @@
   let data = null
   let error = null
   let loading = true
+  let selectedType = null // null = all
+
+  const TYPES = [
+    { key: null,       label: () => $t('toolCalls.typeAll') },
+    { key: 'builtin',  label: () => $t('toolCalls.typeBuiltin') },
+    { key: 'mcp',      label: () => $t('toolCalls.typeMcp') },
+    { key: 'skill',    label: () => $t('toolCalls.typeSkill') },
+  ]
 
   async function loadData() {
     loading = true
     error = null
     try {
-      data = await fetchToolCalls({ ...$dateRange, device: $selectedDevice, tool: $selectedTool })
+      data = await fetchToolCalls({
+        ...$dateRange,
+        device: $selectedDevice,
+        tool: $selectedTool,
+        toolType: selectedType,
+      })
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load data'
       data = null
@@ -23,7 +36,7 @@
     }
   }
 
-  $: $dateRange, $selectedDevice, $selectedTool, loadData()
+  $: $dateRange, $selectedDevice, $selectedTool, selectedType, loadData()
 </script>
 
 <svelte:head>
@@ -41,6 +54,18 @@
   <ToolSelector />
 </div>
 
+<div class="type-tabs">
+  {#each TYPES as type}
+    <button
+      class="tab"
+      class:active={selectedType === type.key}
+      on:click={() => { selectedType = type.key }}
+    >
+      {type.label()}
+    </button>
+  {/each}
+</div>
+
 {#if loading}
   <div class="state-msg">{$t('common.loading')}</div>
 {:else if error}
@@ -55,7 +80,14 @@
     {#each data.toolCalls as tc, i}
       <div class="row animate-row">
         <span class="rank mono">#{i + 1}</span>
-        <span class="name mono">{tc.name}</span>
+        <span class="name mono">
+          {tc.displayName}
+          {#if tc.type === 'mcp'}
+            <span class="badge badge-mcp">{$t('toolCalls.badgeMcp')}</span>
+          {:else if tc.type === 'skill'}
+            <span class="badge badge-skill">{$t('toolCalls.badgeSkill')}</span>
+          {/if}
+        </span>
         <div class="bar-container">
           <div class="bar" style="width: {tc.percentage}%"></div>
         </div>
@@ -67,6 +99,34 @@
 {/if}
 
 <style>
+  .type-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
+  .tab {
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border-subtle);
+    background: var(--raised);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--mono);
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .tab:hover {
+    color: var(--text);
+    background: var(--hover);
+  }
+  .tab.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
   .ranking {
     display: flex;
     flex-direction: column;
@@ -74,7 +134,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 2.5rem 8rem 1fr 4.5rem 3.5rem;
+    grid-template-columns: 2.5rem 1fr 1fr 4.5rem 3.5rem;
     align-items: center;
     gap: 0.75rem;
     padding: 0.65rem 0.85rem;
@@ -93,6 +153,29 @@
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .badge-mcp {
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+  .badge-skill {
+    background: var(--purple-dim);
+    color: var(--purple);
   }
   .bar-container {
     height: 6px;
@@ -117,11 +200,9 @@
     color: var(--text-muted);
     font-size: 0.75rem;
   }
-
   .animate-row {
     animation: fadeIn 0.2s ease both;
   }
-
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

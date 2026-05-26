@@ -33,7 +33,10 @@ export async function fetchModels(params) {
 }
 
 export async function fetchToolCalls(params) {
-  return apiFetch(buildUrl('/api/tool-calls', params))
+  return apiFetch(buildUrl('/api/tool-calls', {
+    ...params,
+    toolType: params.toolType || undefined,
+  }))
 }
 
 export async function fetchSessions(params) {
