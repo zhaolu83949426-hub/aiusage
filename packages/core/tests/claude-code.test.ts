@@ -74,4 +74,43 @@ describe('ClaudeCodeParser', () => {
     const result2 = parser.parseLine(lines[1], { ...baseContext, lineOffset: 100 })
     expect(result1!.record.id).toBe(result2!.record.id)
   })
+
+  it('extracts specific skill name as skill__<name> for Skill tool_use', () => {
+    const line = JSON.stringify({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'tu_skill', name: 'Skill', input: { skill: 'superpowers:brainstorming' } },
+        ],
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 10, output_tokens: 5 },
+      },
+      timestamp: 1776738085700,
+    })
+    const result = parser.parseLine(line, { ...baseContext, lineOffset: 9999 })
+    expect(result).not.toBeNull()
+    expect(result!.toolCalls).toHaveLength(1)
+    expect(result!.toolCalls[0].name).toBe('skill__superpowers:brainstorming')
+    expect(result!.toolCalls[0].callIndex).toBe(0)
+  })
+
+  it('extracts skill__unknown when Skill tool_use has no skill argument', () => {
+    const line = JSON.stringify({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'tu_skill2', name: 'Skill', input: {} },
+        ],
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 10, output_tokens: 5 },
+      },
+      timestamp: 1776738085700,
+    })
+    const result = parser.parseLine(line, { ...baseContext, lineOffset: 9998 })
+    expect(result).not.toBeNull()
+    expect(result!.toolCalls).toHaveLength(1)
+    expect(result!.toolCalls[0].name).toBe('skill__unknown')
+  })
 })

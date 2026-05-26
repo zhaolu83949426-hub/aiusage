@@ -73,14 +73,21 @@ export class ClaudeCodeParser implements Parser {
       let callIndex = 0
       for (const block of parsed.message.content) {
         if (block.type === 'tool_use') {
-          // Clean malformed names (some logs have args/quotes embedded in name)
-          const rawName: string = block.name ?? ''
-          const cleanName = rawName.replace(/[=:"'{\[\s].*$/s, '').replace(/[^a-zA-Z0-9_-]/g, '')
-          if (!cleanName) { callIndex++; continue }
+          let storedName: string
+          if (block.name === 'Skill') {
+            const skillArg = typeof block.input?.skill === 'string' ? block.input.skill.trim() : ''
+            storedName = skillArg ? `skill__${skillArg}` : 'skill__unknown'
+          } else {
+            // Clean malformed names (some logs have args/quotes embedded in name)
+            const rawName: string = block.name ?? ''
+            const cleanName = rawName.replace(/[=:"'{\[\s].*$/s, '').replace(/[^a-zA-Z0-9_-]/g, '')
+            if (!cleanName) { callIndex++; continue }
+            storedName = cleanName
+          }
           toolCalls.push({
-            id: generateToolCallId(record.id, cleanName, ts, callIndex),
+            id: generateToolCallId(record.id, storedName, ts, callIndex),
             recordId: record.id,
-            name: cleanName,
+            name: storedName,
             ts,
             callIndex,
           })
