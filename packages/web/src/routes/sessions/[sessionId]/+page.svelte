@@ -127,6 +127,9 @@
               <div class="tool-call">
                 <span class="tc-index mono muted">#{tc.callIndex + 1}</span>
                 <span class="tc-name mono">{tc.displayName}</span>
+                {#if tc.ts != null}
+                  <span class="tc-offset mono muted">{formatRelativeTs(tc.ts - record.ts)}</span>
+                {/if}
                 {#if tc.type === 'mcp'}
                   <span class="badge badge-mcp">mcp</span>
                 {:else if tc.type === 'skill'}
@@ -289,6 +292,10 @@
     flex: 1;
     font-size: 0.78rem;
     color: var(--text);
+  }
+  .tc-offset {
+    font-size: 0.65rem;
+    flex-shrink: 0;
   }
 
   .badge {
