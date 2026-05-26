@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import { readFileSync, readdirSync, statSync, existsSync, openSync, readSync, closeSync } from 'node:fs'
 import { join, extname } from 'node:path'
 import { homedir, hostname, platform } from 'node:os'
-import { Aggregator, resolveExchangeRate, generateToolCallId, type Tool } from '@aiusage/core'
+import { Aggregator, resolveExchangeRate, generateToolCallId, inferProvider, type Tool } from '@aiusage/core'
 import { insertRecord } from '../db/records.js'
 import { insertToolCall } from '../db/tool-calls.js'
 import { getState } from '../init.js'
@@ -570,6 +570,10 @@ export async function runParse(db: Database.Database, filterTool?: string, optio
   // Historical rows were stored before the parser learned to read block.input.skill.
   backfillSkillNames(db)
 
+  // Backfill Codex records whose model was stored as 'unknown' because the
+  // turn_context line was before the watermark when they were parsed.
+  backfillCodexModels(db)
+
   return { parsedCount, toolCallCount, errors }
 }
 
@@ -620,6 +624,67 @@ function backfillSkillNames(db: Database.Database): void {
       updateStmt.run(newId, storedName, row.id)
     } catch {
       // File missing or line unreadable — leave this row as-is
+    }
+  }
+}
+
+function backfillCodexModels(db: Database.Database): void {
+  const rows = db.prepare(`
+    SELECT id, source_file, line_offset
+    FROM records
+    WHERE tool = 'codex' AND model = 'unknown'
+      AND source_file NOT LIKE 'synced/%'
+  `).all() as { id: string; source_file: string; line_offset: number }[]
+
+  if (rows.length === 0) return
+
+  // Group by source_file so we only read each file once
+  const byFile = new Map<string, typeof rows>()
+  for (const row of rows) {
+    const list = byFile.get(row.source_file) ?? []
+    list.push(row)
+    byFile.set(row.source_file, list)
+  }
+
+  const updateStmt = db.prepare(
+    `UPDATE records SET model = ?, provider = ?, cost = ?, cost_source = ?, updated_at = ? WHERE id = ?`
+  )
+
+  for (const [sourceFile, fileRows] of byFile) {
+    try {
+      const content = readFileSync(sourceFile, 'utf-8')
+      const lines = content.split('\n')
+
+      // Build a map: line_offset → model at that point in the file
+      const offsetToModel = new Map<number, string>()
+      let currentModel = ''
+      let byteOffset = 0
+
+      for (const line of lines) {
+        if (line.trim()) {
+          try {
+            const parsed = JSON.parse(line)
+            // track turn_context model
+            const turnModel = parsed.type === 'turn_context' ? parsed.payload?.model : undefined
+            if (turnModel) currentModel = turnModel
+            // record model at this offset if it's a token_count event
+            const payload = parsed.event_msg?.payload ?? (parsed.type === 'event_msg' ? parsed.payload : undefined)
+            if (payload?.type === 'token_count' && currentModel) {
+              offsetToModel.set(byteOffset, currentModel)
+            }
+          } catch {}
+        }
+        byteOffset += Buffer.byteLength(line, 'utf-8') + 1
+      }
+
+      for (const row of fileRows) {
+        const model = offsetToModel.get(row.line_offset)
+        if (!model) continue
+        const provider = inferProvider(model)
+        updateStmt.run(model, provider, 0, 'unknown', Date.now(), row.id)
+      }
+    } catch {
+      // File missing or unreadable — skip
     }
   }
 }
