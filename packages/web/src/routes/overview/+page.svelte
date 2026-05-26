@@ -10,6 +10,7 @@
   let data = null
   let error = null
   let loading = true
+  let tcTab = 'all'
   let initialized = false
 
   async function loadData() {
@@ -126,19 +127,45 @@
     </div>
 
     <div class="card">
-      <div class="section-title">{$t('overview.topToolCalls')}</div>
-      {#if data.topToolCalls.length === 0}
-        <p class="muted">{$t('overview.noToolCalls')}</p>
-      {:else}
-        <div class="tc-list">
-          {#each data.topToolCalls as tc, i}
-            <div class="tc-row" style="animation-delay: {i * 40}ms">
-              <span class="tc-rank">#{i + 1}</span>
-              <span class="tc-name mono">{tc.name}</span>
-              <span class="tc-count mono">{formatNumber(tc.count)}</span>
-            </div>
-          {/each}
+      <div class="card-header">
+        <div class="section-title">{$t('overview.topToolCalls')}</div>
+        <div class="card-tabs">
+          <button class="card-tab" class:active={tcTab === 'all'} on:click={() => tcTab = 'all'}>
+            {$t('overview.tabAll')}
+          </button>
+          <button class="card-tab" class:active={tcTab === 'mcp'} on:click={() => tcTab = 'mcp'}>
+            {$t('overview.tabMcp')}
+          </button>
         </div>
+      </div>
+      {#if tcTab === 'all'}
+        {#if data.topToolCalls.length === 0}
+          <p class="muted">{$t('overview.noToolCalls')}</p>
+        {:else}
+          <div class="tc-list">
+            {#each data.topToolCalls as tc, i}
+              <div class="tc-row" style="animation-delay: {i * 40}ms">
+                <span class="tc-rank">#{i + 1}</span>
+                <span class="tc-name mono">{tc.name}</span>
+                <span class="tc-count mono">{formatNumber(tc.count)}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        {#if !data.topMcpServers?.length}
+          <p class="muted">{$t('overview.noMcpCalls')}</p>
+        {:else}
+          <div class="tc-list">
+            {#each data.topMcpServers as srv, i}
+              <div class="tc-row" style="animation-delay: {i * 40}ms">
+                <span class="tc-rank">#{i + 1}</span>
+                <span class="tc-name mono">{srv.server}</span>
+                <span class="tc-count mono">{formatNumber(srv.count)}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
       {/if}
     </div>
   </div>
@@ -269,4 +296,32 @@
     .grid-2 { grid-template-columns: 1fr; }
     .token-breakdown { flex-direction: column; }
   }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+  .card-header .section-title {
+    margin-bottom: 0;
+  }
+  .card-tabs {
+    display: flex;
+    gap: 0.2rem;
+  }
+  .card-tab {
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    font-weight: 500;
+    transition: color 0.12s, background 0.12s;
+  }
+  .card-tab:hover { color: var(--text); background: var(--hover); }
+  .card-tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); font-weight: 600; }
 </style>

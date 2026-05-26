@@ -64,6 +64,10 @@ const translations = {
       cost: 'Cost',
       noToolData: 'No data',
       noToolCalls: 'No tool calls recorded',
+      topMcpServers: 'MCP Servers',
+      noMcpCalls: 'No MCP calls recorded',
+      tabAll: 'All',
+      tabMcp: 'MCP Servers',
     },
     tokens: {
       title: 'Tokens',
@@ -335,6 +339,10 @@ const translations = {
       cost: '费用',
       noToolData: '暂无数据',
       noToolCalls: '暂无工具调用记录',
+      topMcpServers: 'MCP 服务器',
+      noMcpCalls: '暂无 MCP 调用记录',
+      tabAll: '全部',
+      tabMcp: 'MCP 服务器',
     },
     tokens: {
       title: 'Token',
