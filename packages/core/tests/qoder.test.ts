@@ -59,8 +59,22 @@ describe('QoderParser', () => {
     expect(parser.parseLine(lines[6], baseContext)).toBeNull()
   })
 
-  it('skips zero-token model responses', () => {
+  it('returns orphan tool calls when tool.requested has no matching completion', () => {
     const parser = new QoderParser()
-    expect(parser.parseLine(lines[7], baseContext)).toBeNull()
+    const requested = JSON.stringify({
+      type: 'tool.requested',
+      ts: '2026-05-18T13:34:10.000+08:00',
+      loop_id: 'loop-123',
+      data: { tool_name: 'Bash' },
+    })
+
+    expect(parser.parseLine(requested, baseContext)).toBeNull()
+
+    const results = parser.finalize()
+    expect(results).toHaveLength(1)
+    expect(results[0].record).toBeNull()
+    expect(results[0].toolCalls).toHaveLength(1)
+    expect(results[0].toolCalls[0].name).toBe('Bash')
+    expect(results[0].toolCalls[0].recordId).toBeNull()
   })
 })

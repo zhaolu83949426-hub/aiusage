@@ -22,9 +22,12 @@ export class CodexParser implements Parser {
       return null
     }
 
-    // Support both formats: { event_msg: { payload: ... } } and { type: 'event_msg', payload: ... }
-    // Also handle top-level turn_context events (new Codex format)
-    const payload = parsed.event_msg?.payload ?? (parsed.type === 'event_msg' ? parsed.payload : undefined)
+    // Support multiple formats:
+    //   { event_msg: { payload: ... } }        — oldest wrapped format
+    //   { type: 'event_msg', payload: ... }     — unwrapped event_msg
+    //   { type: 'response_item', payload: ... } — newer format (function_call lives here)
+    const payload = parsed.event_msg?.payload
+      ?? (parsed.type === 'event_msg' || parsed.type === 'response_item' ? parsed.payload : undefined)
 
     // Track model from turn_context events (top-level or wrapped)
     const turnCtx = parsed.type === 'turn_context' ? parsed.payload : undefined
@@ -44,7 +47,8 @@ export class CodexParser implements Parser {
     if (payload.type === 'function_call') {
       const rawFcTs = parsed.event_msg?.timestamp ?? parsed.timestamp ?? context.now
       this.pendingToolCalls.push({
-        name: payload.function?.name ?? 'unknown',
+        // newer format: payload.name; older format: payload.function.name
+        name: payload.name ?? payload.function?.name ?? 'unknown',
         ts: typeof rawFcTs === 'number' ? rawFcTs : new Date(rawFcTs).getTime(),
       })
       return null

@@ -1,6 +1,6 @@
 import type { Parser, ParseResult, ParseContext } from '../types.js'
 import type { StatsRecord, Tool, ToolCallRecord } from '../types.js'
-import { generateRecordId, generateToolCallId } from '../record-id.js'
+import { generateRecordId, generateToolCallId, generateOrphanToolCallId } from '../record-id.js'
 import { inferProvider } from '../provider.js'
 import { calculateCost, resolvePrice } from '../pricing.js'
 import { normalizeQoderModel } from '../qoder-model.js'
@@ -125,7 +125,21 @@ export class QoderParser implements Parser {
   }
 
   finalize(): ParseResult[] {
+    const toolCalls: ToolCallRecord[] = []
+
+    for (const pending of this.pendingToolCallsByLoopId.values()) {
+      for (const [callIndex, tc] of pending.entries()) {
+        toolCalls.push({
+          id: generateOrphanToolCallId(this.tool, tc.name, tc.ts, callIndex),
+          recordId: null,
+          name: tc.name,
+          ts: tc.ts,
+          callIndex,
+        })
+      }
+    }
+
     this.pendingToolCallsByLoopId.clear()
-    return []
+    return toolCalls.length > 0 ? [{ record: null, toolCalls }] : []
   }
 }

@@ -1,13 +1,13 @@
-# aiusage
+# aiusage — AI 编程助手用量追踪工具
+
+**开源 CLI 和 Web 仪表盘，追踪 Claude Code、Codex、OpenCode、Hermes、Qoder 等工具的 token 用量、费用和会话。** 本地优先，隐私安全，支持 Web 仪表盘和多设备同步。
 
 [![npm version](https://img.shields.io/npm/v/@juliantanx/aiusage)](https://www.npmjs.com/package/@juliantanx/aiusage)
 [![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
-在一个地方追踪 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder 的 AI 编程助手使用情况，包括 token 消耗、费用和工具调用。
-
-aiusage 为你提供一个本地优先的统一视图，用来理解 AI 编程工具的使用情况：token、成本、模型分布、工具活跃度、项目、会话，以及按需启用的多设备同步。
+**aiusage** 为你提供一个本地优先的统一视图，用来理解 AI 编程工具的使用情况：token、成本、模型分布、工具活跃度、项目、会话，以及按需启用的多设备同步。支持 Claude Code、Codex、OpenClaw、OpenCode、Hermes 和 Qoder。
 
 [English](https://github.com/juliantanx/aiusage/blob/main/README.md) | 中文
 

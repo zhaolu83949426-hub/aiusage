@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync, existsSync, openSync, readSync, cl
 import { join, extname } from 'node:path'
 import { homedir, hostname, platform } from 'node:os'
 import { Aggregator, resolveExchangeRate, generateToolCallId, inferProvider, type Tool } from '@aiusage/core'
+import type { ToolCallRecord } from '@aiusage/core'
 import { insertRecord } from '../db/records.js'
 import { insertToolCall } from '../db/tool-calls.js'
 import { getState } from '../init.js'
@@ -574,6 +575,9 @@ export async function runParse(db: Database.Database, filterTool?: string, optio
   // turn_context line was before the watermark when they were parsed.
   backfillCodexModels(db)
 
+  // Backfill historical tool calls for parsers that previously missed newer event formats.
+  backfillMissingToolCalls(db, exchangeRate)
+
   return { parsedCount, toolCallCount, errors }
 }
 
@@ -687,6 +691,96 @@ function backfillCodexModels(db: Database.Database): void {
       // File missing or unreadable — skip
     }
   }
+}
+
+function backfillMissingToolCalls(db: Database.Database, exchangeRate?: number): void {
+  const rows = db.prepare(`
+    SELECT r.id, r.source_file, r.tool, r.line_offset, r.session_id
+    FROM records r
+    LEFT JOIN tool_calls tc ON tc.record_id = r.id
+    WHERE r.tool IN ('codex', 'openclaw', 'qoder')
+      AND r.source_file NOT LIKE 'synced/%'
+      AND tc.id IS NULL
+  `).all() as { id: string; source_file: string; tool: Tool; line_offset: number; session_id: string }[]
+
+  if (rows.length === 0) return
+
+  const rowsByFile = new Map<string, typeof rows>()
+  for (const row of rows) {
+    const list = rowsByFile.get(row.source_file) ?? []
+    list.push(row)
+    rowsByFile.set(row.source_file, list)
+  }
+
+  for (const [sourceFile, fileRows] of rowsByFile) {
+    try {
+      const content = readFileSync(sourceFile, 'utf-8')
+      const lines = content.split('\n')
+      const aggregator = new Aggregator()
+      const recordIdByOffset = new Map<number, string>()
+      const sessionIdByOffset = new Map<number, string>()
+      const tool = fileRows[0]?.tool
+      if (!tool) continue
+
+      for (const row of fileRows) {
+        recordIdByOffset.set(row.line_offset, row.id)
+        sessionIdByOffset.set(row.line_offset, row.session_id)
+      }
+
+      let byteOffset = 0
+      for (const line of lines) {
+        if (!line.trim()) {
+          byteOffset += Buffer.byteLength(line, 'utf-8') + 1
+          continue
+        }
+
+        const context = aggregator.createContext({
+          tool,
+          sourceFile,
+          lineOffset: byteOffset,
+          sessionId: sessionIdByOffset.get(byteOffset) ?? deriveSessionId(tool, sourceFile),
+          device: '',
+          deviceInstanceId: '',
+          exchangeRate,
+        })
+        const result = aggregator.parseLine(line, context)
+        if (result?.toolCalls?.length) {
+          insertBackfilledToolCalls(db, result.toolCalls, tool, recordIdByOffset.get(byteOffset) ?? null)
+        }
+        byteOffset += Buffer.byteLength(line, 'utf-8') + 1
+      }
+
+      const orphanResults = aggregator.finalize()
+      for (const result of orphanResults) {
+        if (result.toolCalls.length) insertBackfilledToolCalls(db, result.toolCalls, tool, null)
+      }
+    } catch {
+      // File missing or unreadable — skip
+    }
+  }
+}
+
+function insertBackfilledToolCalls(db: Database.Database, toolCalls: ToolCallRecord[], tool: Tool, actualRecordId: string | null): void {
+  for (const tc of toolCalls) {
+    if (actualRecordId) {
+      const name = tc.name
+      const id = generateToolCallId(actualRecordId, name, tc.ts, tc.callIndex)
+      const dup = db.prepare('SELECT 1 FROM tool_calls WHERE id = ?').get(id)
+      if (!dup) insertToolCall(db, { ...tc, id, recordId: actualRecordId })
+      continue
+    }
+
+    const dup = db.prepare('SELECT 1 FROM tool_calls WHERE id = ?').get(tc.id)
+    if (!dup) insertToolCall(db, { ...tc, tool } as ToolCallRecord)
+  }
+}
+
+function deriveSessionId(tool: Tool, sourceFile: string): string {
+  const normalized = sourceFile.replace(/\\/g, '/')
+  const fileName = normalized.split('/').pop() ?? sourceFile
+  if (tool === 'openclaw') return fileName.replace(/\.(trajectory\.)?jsonl$/, '')
+  if (tool === 'qoder') return normalized.split('/').slice(-2, -1)[0] ?? fileName.replace(/\.jsonl$/, '')
+  return fileName.replace(/\.jsonl$/, '')
 }
 
 export function getDefaultSourcePaths(): Record<string, string> {

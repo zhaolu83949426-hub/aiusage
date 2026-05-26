@@ -4,16 +4,21 @@
   "type": "module",
   "description": "Track and analyze AI coding assistant usage across Claude Code, Codex, and more",
   "keywords": [
+    "aiusage",
+    "ai-usage",
     "ai",
     "claude",
+    "claude-code",
     "codex",
     "opencode",
     "qoder",
     "usage",
     "token",
+    "token-tracker",
     "cost",
     "analytics",
-    "dashboard"
+    "dashboard",
+    "developer-tools"
   ],
   "homepage": "https://github.com/juliantanx/aiusage#readme",
   "repository": {

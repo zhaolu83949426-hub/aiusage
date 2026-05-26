@@ -1,6 +1,6 @@
 import type { Parser, ParseResult, ParseContext } from '../types.js'
 import type { StatsRecord, ToolCallRecord, Tool } from '../types.js'
-import { generateRecordId, generateToolCallId } from '../record-id.js'
+import { generateRecordId, generateToolCallId, generateOrphanToolCallId } from '../record-id.js'
 import { inferProvider } from '../provider.js'
 import { calculateCost } from '../pricing.js'
 
@@ -13,6 +13,30 @@ export class OpenClawParser implements Parser {
       parsed = JSON.parse(line)
     } catch {
       return null
+    }
+
+    if (parsed.message?.role === 'assistant' && Array.isArray(parsed.message.content) && !parsed.message?.usage) {
+      const rawTs = parsed.message.timestamp ?? parsed.timestamp ?? context.now
+      const ts = typeof rawTs === 'number' ? rawTs : new Date(rawTs).getTime()
+      const toolCalls: ToolCallRecord[] = []
+      let callIndex = 0
+
+      for (const block of parsed.message.content) {
+        if (block.type === 'tool_use' || block.type === 'toolCall') {
+          toolCalls.push({
+            id: generateOrphanToolCallId(this.tool, block.name, ts, callIndex),
+            recordId: null,
+            name: block.name,
+            ts,
+            callIndex,
+          })
+          callIndex++
+        }
+      }
+
+      if (toolCalls.length > 0) {
+        return { record: null, toolCalls }
+      }
     }
 
     // Skip lines without message.usage
@@ -85,7 +109,8 @@ export class OpenClawParser implements Parser {
     if (Array.isArray(parsed.message.content)) {
       let callIndex = 0
       for (const block of parsed.message.content) {
-        if (block.type === 'tool_use') {
+        // openclaw uses 'toolCall' (camelCase); Anthropic API uses 'tool_use'
+        if (block.type === 'tool_use' || block.type === 'toolCall') {
           toolCalls.push({
             id: generateToolCallId(record.id, block.name, ts, callIndex),
             recordId: record.id,

@@ -78,8 +78,30 @@ describe('OpenClawParser', () => {
     expect(result!.record.costSource).toBe('log')
   })
 
-  it('sets thinkingTokens to 0 (OpenClaw doesn\'t provide)', () => {
-    const result = parser.parseLine(lines[0], { ...baseContext, lineOffset: 0 })
-    expect(result!.record.thinkingTokens).toBe(0)
+  it('returns orphan tool calls for assistant messages without usage', () => {
+    const parser = new OpenClawParser()
+    const line = JSON.stringify({
+      type: 'message',
+      id: 'msg-1',
+      timestamp: '2026-05-18T13:37:38.877Z',
+      message: {
+        role: 'assistant',
+        content: [
+          { type: 'text', text: 'I will inspect the file first.' },
+          { type: 'toolCall', id: 'call_1', name: 'read', arguments: { path: '/tmp/demo.txt' } },
+          { type: 'toolCall', id: 'call_2', name: 'exec', arguments: { command: 'pwd' } },
+        ],
+      },
+    })
+
+    const result = parser.parseLine(line, { ...baseContext, lineOffset: 999 })
+
+    expect(result).not.toBeNull()
+    expect(result!.record).toBeNull()
+    expect(result!.toolCalls).toHaveLength(2)
+    expect(result!.toolCalls[0].name).toBe('read')
+    expect(result!.toolCalls[0].recordId).toBeNull()
+    expect(result!.toolCalls[1].name).toBe('exec')
+    expect(result!.toolCalls[1].recordId).toBeNull()
   })
 })

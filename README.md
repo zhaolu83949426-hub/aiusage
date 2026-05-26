@@ -1,13 +1,13 @@
-# aiusage
+# aiusage — AI Coding Assistant Usage Tracker
+
+**Open-source CLI and dashboard to track token usage, cost, and sessions across Claude Code, Codex, OpenCode, Hermes, Qoder, and more.** Local-first, privacy-respecting, with an optional web dashboard and multi-machine sync.
 
 [![npm version](https://img.shields.io/npm/v/@juliantanx/aiusage)](https://www.npmjs.com/package/@juliantanx/aiusage)
 [![CI](https://github.com/juliantanx/aiusage/actions/workflows/test.yml/badge.svg)](https://github.com/juliantanx/aiusage/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
-Track AI coding assistant usage, token consumption, cost, and tool calls across Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
-
-aiusage gives you one local-first place to understand how your AI coding tools are being used: tokens, cost, model mix, tool activity, projects, sessions, and multi-machine sync when you need it.
+**aiusage** gives you one local-first place to understand how your AI coding tools are being used: tokens, cost, model mix, tool activity, projects, sessions, and multi-machine sync when you need it. Supports Claude Code, Codex, OpenClaw, OpenCode, Hermes, and Qoder.
 
 English | [中文](https://github.com/juliantanx/aiusage/blob/main/README_zh.md)
 

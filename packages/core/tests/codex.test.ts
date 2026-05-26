@@ -75,10 +75,40 @@ describe('CodexParser', () => {
     expect(results[0].toolCalls[0].recordId).toBeNull()
   })
 
-  it('uses event_msg.timestamp for tool calls', () => {
+  it('parses response_item function_call format and associates pending tool calls', () => {
     const parser = new CodexParser()
-    parser.parseLine(lines[1], { ...baseContext, lineOffset: lines[0].length + 1 })
-    const result = parser.parseLine(lines[2], { ...baseContext, lineOffset: lines[0].length + lines[1].length + 2 })
-    expect(result!.toolCalls[0].ts).toBe(1776738085350)
+    const functionCall = JSON.stringify({
+      timestamp: '2026-05-26T08:05:24.042Z',
+      type: 'response_item',
+      payload: {
+        type: 'function_call',
+        name: 'exec_command',
+        arguments: '{"cmd":"pwd"}',
+        call_id: 'call_123',
+      },
+    })
+    const tokenCount = JSON.stringify({
+      timestamp: '2026-05-26T08:05:25.000Z',
+      type: 'event_msg',
+      payload: {
+        type: 'token_count',
+        model: 'gpt-5.4',
+        info: {
+          last_token_usage: {
+            input_tokens: 12,
+            cached_input_tokens: 0,
+            output_tokens: 3,
+            reasoning_output_tokens: 0,
+          },
+        },
+      },
+    })
+
+    expect(parser.parseLine(functionCall, { ...baseContext, lineOffset: 100 })).toBeNull()
+    const result = parser.parseLine(tokenCount, { ...baseContext, lineOffset: 200 })
+
+    expect(result).not.toBeNull()
+    expect(result!.toolCalls).toHaveLength(1)
+    expect(result!.toolCalls[0].name).toBe('exec_command')
   })
 })
