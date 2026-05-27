@@ -17,7 +17,7 @@ English | [中文](./README_zh.md)
 ## Prerequisites
 
 - [aiusage](https://github.com/juliantanx/aiusage) CLI installed and data parsed (`aiusage parse`)
-- Node.js >= 18
+- Node.js >= 20
 
 ## Install
 

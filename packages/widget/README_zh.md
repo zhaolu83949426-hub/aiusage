@@ -17,7 +17,7 @@
 ## 前置条件
 
 - 已安装 [aiusage](https://github.com/juliantanx/aiusage) CLI 并完成数据解析（`aiusage parse`）
-- Node.js >= 18
+- Node.js >= 20
 
 ## 安装
 
