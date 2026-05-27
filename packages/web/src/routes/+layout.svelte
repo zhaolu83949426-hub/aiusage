@@ -211,6 +211,13 @@
             <span class="ctrl-label">{$t('nav.collapse')}</span>
           {/if}
         </button>
+
+        <a class="ctrl-btn" href="https://aiusage.jtanx.com" target="_blank" rel="noopener" title="aiusage.jtanx.com">
+          <span class="ctrl-icon">↗</span>
+          {#if !collapsed}
+            <span class="ctrl-label">{$lang === 'en' ? 'Website' : '官网'}</span>
+          {/if}
+        </a>
       </div>
 
     </div>
