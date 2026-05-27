@@ -70,6 +70,9 @@ export const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = {
   'qwen-long':             { input: 0.5,   output: 2.0,                     currency: 'CNY' },
   'qwen2.5-72b':           { input: 10.0,  output: 40.0,                    currency: 'CNY' },
   'qwen2.5-7b':            { input: 1.26,  output: 5.04,                    currency: 'CNY' },
+  // Xiaomi MiMo — https://platform.xiaomimimo.com/docs/zh-CN/pricing
+  'mimo-v2.5-pro':         { input: 3.0,   output: 6.0,  cacheRead: 0.025,             currency: 'CNY' },
+  'mimo-v2.5':             { input: 1.0,   output: 2.0,  cacheRead: 0.020,             currency: 'CNY' },
   // MiniMax — https://platform.minimaxi.com/docs/guides/pricing-paygo
   'minimax-m2.7':          { input: 2.1,   output: 8.4,  cacheRead: 0.42,  cacheWrite: 2.6,  currency: 'CNY' },
   'minimax-m2.5':          { input: 2.1,   output: 8.4,  cacheRead: 0.21,  cacheWrite: 2.6,  currency: 'CNY' },
