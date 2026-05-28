@@ -1,4 +1,5 @@
 <script>
+  import { browser } from '$app/environment'
   import { onMount, tick } from 'svelte'
   import { lang } from '$lib/lang'
   import TableOfContents from '$lib/components/TableOfContents.svelte'
@@ -165,7 +166,7 @@
     }
   }
 
-  $: if (activeSection) {
+  $: if (browser && activeSection) {
     tick().then(() => {
       const sidebar = document.querySelector('.docs-sidebar')
       if (!sidebar) return
