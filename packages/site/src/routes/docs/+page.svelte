@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   import { lang } from '$lib/lang'
   import TableOfContents from '$lib/components/TableOfContents.svelte'
   import CodeBlock from '$lib/components/CodeBlock.svelte'
@@ -157,6 +157,15 @@
       }
       expandedSections = expandedSections
     }
+  }
+
+  $: if (activeSection) {
+    tick().then(() => {
+      const sidebar = document.querySelector('.docs-sidebar')
+      if (!sidebar) return
+      const activeEl = sidebar.querySelector('.toc-l2.active') ?? sidebar.querySelector('.toc-l1.active')
+      activeEl?.scrollIntoView({ block: 'nearest' })
+    })
   }
 
   onMount(() => {
