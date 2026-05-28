@@ -478,17 +478,17 @@
       <div class="contribute-stats">
         <div class="stat-card">
           <a href="https://github.com/juliantanx/aiusage" target="_blank" rel="noopener">
-            <img src="https://img.shields.io/github/stars/juliantanx/aiusage?style=social" alt="GitHub stars" loading="lazy" />
+            <img src="https://img.shields.io/github/stars/juliantanx/aiusage?style=social" alt="GitHub stars" loading="lazy" onerror="this.style.display='none'" />
           </a>
         </div>
         <div class="stat-card">
           <a href="https://github.com/juliantanx/aiusage/fork" target="_blank" rel="noopener">
-            <img src="https://img.shields.io/github/forks/juliantanx/aiusage?style=social" alt="GitHub forks" loading="lazy" />
+            <img src="https://img.shields.io/github/forks/juliantanx/aiusage?style=social" alt="GitHub forks" loading="lazy" onerror="this.style.display='none'" />
           </a>
         </div>
         <div class="stat-card">
           <a href="https://github.com/juliantanx/aiusage/issues" target="_blank" rel="noopener">
-            <img src="https://img.shields.io/github/issues/juliantanx/aiusage?style=social" alt="GitHub issues" loading="lazy" />
+            <img src="https://img.shields.io/github/issues/juliantanx/aiusage?style=social" alt="GitHub issues" loading="lazy" onerror="this.style.display='none'" />
           </a>
         </div>
       </div>
