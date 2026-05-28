@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const { spawn } = require('child_process')
-const { writeFileSync, mkdirSync } from 'fs'
+const { writeFileSync, mkdirSync } = require('fs')
 const { homedir } = require('os')
 const electron = require('electron')
 const path = require('path')
