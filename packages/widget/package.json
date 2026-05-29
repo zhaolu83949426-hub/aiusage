@@ -1,6 +1,6 @@
 {
   "name": "@juliantanx/aiusage-widget",
-  "version": "1.3.2",
+  "version": "1.3.4",
   "private": false,
   "description": "System tray widget for aiusage — view AI token usage from your system tray",
   "keywords": [
@@ -35,6 +35,7 @@
     "aiusage-widget": "bin/launcher.js"
   },
   "scripts": {
+    "postinstall": "node bin/install-native.js",
     "rebuild": "pnpm run rebuild:electron",
     "rebuild:electron": "node -e \"const {rebuild}=require('@electron/rebuild');const v=require('electron/package.json').version;rebuild({buildPath:process.cwd(),electronVersion:v,onlyModules:['better-sqlite3'],force:true}).then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1)})\"",
     "prepare:native": "node bin/prepare-native.js",
@@ -45,7 +46,8 @@
     "test": "pnpm run rebuild:node && vitest run"
   },
   "dependencies": {
-    "better-sqlite3": "^12.0.0"
+    "better-sqlite3": "^12.0.0",
+    "electron": "^33.0.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.1",
@@ -53,7 +55,6 @@
     "@types/better-sqlite3": "*",
     "@types/node": "*",
     "concurrently": "^8.0.0",
-    "electron": "^33.0.0",
     "electron-builder": "^25.0.0",
     "svelte": "^4.0.0",
     "typescript": "^5.0.0",
