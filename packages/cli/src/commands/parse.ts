@@ -13,6 +13,7 @@ import { runParseOpenCode } from './parse-opencode.js'
 import { runParseHermes } from './parse-hermes.js'
 import { runParseQoder } from './parse-qoder.js'
 import { runParseCursor } from './parse-cursor.js'
+import { runParseKiloCode, defaultKiloCodePath } from './parse-kilocode.js'
 import type { ProgressInfo } from '../progress.js'
 
 interface ParseResult {
@@ -267,7 +268,7 @@ function extractSessionId(filePath: string, tool: Tool): string {
   return 'unknown'
 }
 
-export async function runParse(db: Database.Database, filterTool?: string, options?: { openCodeDbPath?: string; hermesDbPath?: string; qoderDbPath?: string; cursorDbPath?: string; onProgress?: (info: ProgressInfo) => void }): Promise<ParseResult> {
+export async function runParse(db: Database.Database, filterTool?: string, options?: { openCodeDbPath?: string; hermesDbPath?: string; qoderDbPath?: string; cursorDbPath?: string; kiloCodePath?: string; onProgress?: (info: ProgressInfo) => void }): Promise<ParseResult> {
   const state = getState(AIUSAGE_DIR)
   const config = loadConfig()
   const exchangeRate = resolveExchangeRate(config ?? {})
@@ -533,6 +534,33 @@ export async function runParse(db: Database.Database, filterTool?: string, optio
     }
   }
 
+  // KiloCode: ui_messages.json files
+  const kiloCodePath = options?.kiloCodePath ?? config?.sources?.['kilocode'] ?? defaultKiloCodePath()
+  if ((!filterTool || filterTool === 'kilocode') && existsSync(kiloCodePath)) {
+    try {
+      const result = runParseKiloCode(kiloCodePath, {
+        dbPath: kiloCodePath,
+        device,
+        deviceInstanceId,
+        platform: devicePlatform,
+        now: Date.now(),
+        cursor: wm.getKiloCodeCursor(),
+        exchangeRate,
+      })
+
+      for (const record of result.records) insertRecord(db, record)
+      if (result.nextCursor !== undefined) {
+        wm.setKiloCodeCursor(result.nextCursor)
+        wm.save()
+      }
+      parsedCount += result.records.length
+      errors.push(...result.errors)
+      onProgress({ phase: 'Parsing JSON', tool: 'kilocode', current: 1, total: 1, records: parsedCount, toolCalls: toolCallCount })
+    } catch (e) {
+      errors.push(`${kiloCodePath}: ${e instanceof Error ? e.message : e}`)
+    }
+  }
+
   // Fix historical records that were parsed before init created state.json.
   // If the current device UUID is known, backfill any records with 'unknown' device_instance_id.
   if (deviceInstanceId !== 'unknown') {
@@ -794,5 +822,6 @@ export function getDefaultSourcePaths(): Record<string, string> {
     'qoder':       join(home, '.qoder', 'logs', 'sessions'),
     'qoder-db':    defaultQoderDbPath(),
     'cursor':      defaultCursorDbPath(),
+    'kilocode':    defaultKiloCodePath(),
   }
 }
