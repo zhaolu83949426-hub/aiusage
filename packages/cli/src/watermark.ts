@@ -29,10 +29,6 @@ export interface CursorCursor {
   lastId: string         // composerId
 }
 
-export interface KiloCodeCursor {
-  lastMessageIndex: number  // Index of last processed message in ui_messages.json
-}
-
 export type FileWatermarkData = Record<Tool, Record<string, WatermarkEntry>>
 
 export interface WatermarkState {
@@ -41,7 +37,6 @@ export interface WatermarkState {
   hermes?: HermesCursor | null
   qoder?: QoderCursor | null
   cursor?: CursorCursor | null
-  kilocode?: KiloCodeCursor | null
 }
 
 /** @deprecated Use FileWatermarkData instead */
@@ -56,7 +51,6 @@ function defaultFileData(): FileWatermarkData {
     'hermes': {},
     'qoder': {},
     'cursor': {},
-    'kilocode': {},
   }
 }
 
@@ -80,7 +74,7 @@ export class WatermarkManager {
       if (parsed && typeof parsed === 'object' && !('files' in parsed)) {
         return { files: { ...defaultFileData(), ...parsed } }
       }
-      return { files: { ...defaultFileData(), ...(parsed.files ?? {}) }, opencode: parsed.opencode ?? null, hermes: parsed.hermes ?? null, qoder: parsed.qoder ?? null, cursor: parsed.cursor ?? null, kilocode: parsed.kilocode ?? null }
+      return { files: { ...defaultFileData(), ...(parsed.files ?? {}) }, opencode: parsed.opencode ?? null, hermes: parsed.hermes ?? null, qoder: parsed.qoder ?? null, cursor: parsed.cursor ?? null }
     } catch {
       return { files: defaultFileData() }
     }
@@ -142,13 +136,5 @@ export class WatermarkManager {
 
   setCursorCursor(cursor: CursorCursor): void {
     this.data.cursor = cursor
-  }
-
-  getKiloCodeCursor(): number {
-    return this.data.kilocode?.lastMessageIndex ?? 0
-  }
-
-  setKiloCodeCursor(index: number): void {
-    this.data.kilocode = { lastMessageIndex: index }
   }
 }
