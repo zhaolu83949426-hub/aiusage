@@ -486,7 +486,7 @@ docker build -t aiusage .
 | Qoder (sessions) | `~/.qoder/logs/sessions/` | `~/.qoder/logs/sessions/` plus WSL-mounted Windows user homes | `%USERPROFILE%\.qoder\logs\sessions\` |
 | Qoder (SQLite) | `~/Library/Application Support/Qoder/SharedClientCache/cache/db/local.db` | `~/.local/share/Qoder/SharedClientCache/cache/db/local.db` | `%LOCALAPPDATA%\Qoder\SharedClientCache\cache\db\local.db` |
 | Cursor | `~/Library/Application Support/Cursor/User/globalStorage/state.vscdb` | `~/.config/Cursor/User/globalStorage/state.vscdb` | `%APPDATA%\Cursor\User\globalStorage\state.vscdb` |
-| KiloCode | `~/Library/Application Support/Code/User/globalStorage/kilocode.kilo-code/tasks/` | `~/.config/Code/User/globalStorage/kilocode.kilo-code/tasks/` | `%APPDATA%\Code\User\globalStorage\kilocode.kilo-code\tasks\` |
+| KiloCode | `~/Library/Application Support/kilo/kilo.db` | `~/.local/share/kilo/kilo.db` | `%LOCALAPPDATA%\kilo\kilo.db` |
 
 Discovery behavior:
 
@@ -498,7 +498,7 @@ Discovery behavior:
 - **Qoder (sessions)** — recursively scans structured session segment logs (`logs/sessions/**/segments/*.jsonl`) and imports `model.response.completed` token events. On WSL, aiusage also checks mounted Windows user homes such as `/mnt/c/Users/<user>`, `/mnt/d/Users/<user>`, and `/mnt/e/Users/<user>` for the same Qoder session-log layout.
 - **Qoder (SQLite)** — reads the `local.db` SQLite database directly (`SharedClientCache/cache/db/local.db`) and imports assistant messages from the `chat_message` table, joined with `chat_record` for model information. This is the primary source on macOS and is tried alongside the sessions directory.
 - **Cursor** — reads Cursor's `state.vscdb` SQLite database directly and imports composer conversations with token usage data.
-- **KiloCode** — scans KiloCode's global storage directory for task directories containing `ui_messages.json` files, then parses API request messages with token usage data.
+- **KiloCode** — reads the `kilo.db` SQLite database directly and imports assistant messages from the `message` table with token usage data. Supports input, output, cache read/write, and thinking tokens.
 
 > On Linux, OpenCode respects `$XDG_DATA_HOME` if set.
 
@@ -519,12 +519,12 @@ If you installed a tool to a non-default location, override the paths in the **S
     "qoder": "/custom/path/.qoder/logs/sessions",
     "qoder-db": "/custom/path/local.db",
     "cursor": "/custom/path/state.vscdb",
-    "kilocode": "/custom/path/kilocode.kilo-code"
+    "kilocode-db": "/custom/path/kilo.db"
   }
 }
 ```
 
-Only the paths you specify are overridden; unspecified tools fall back to their defaults. `qoder` points to the session logs directory; `qoder-db` points directly to the `local.db` SQLite file; `kilocode` points to the KiloCode global storage directory.
+Only the paths you specify are overridden; unspecified tools fall back to their defaults. `qoder` points to the session logs directory; `qoder-db` points directly to the `local.db` SQLite file; `kilocode-db` points directly to the `kilo.db` SQLite file.
 
 ## Database Visualization
 
